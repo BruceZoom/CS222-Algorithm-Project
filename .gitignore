@@ -1,3 +1,7 @@
+## Power Point
+*.ppt
+*.pptx
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
