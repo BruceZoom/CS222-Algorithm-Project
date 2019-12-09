@@ -199,8 +199,29 @@
 % xyc
 \section{Problem Description}
 
-% xzy
+% wzy
 \section{Problem Formulation}
+There has not been much time for us to fully consider the optimal way of addressing those problems, but we do propose one possible formulation and the solution idea in this section.
+
+Assume there are $N$ classes in total, each denoted by $A_i$.
+We further divide each class $A_i$ into $M_i$ subsets $A_{ij}$ according to some features of samples, e.g., the activation of certain convolution filters.
+Now, we have a set $\mathcal{D}$ of $K$ (a relatively large number) binary classifiers each identifying a subset of all $A_{ij}$ classes.
+Say classifier $d$ separates $\{A_{ij} \,|\, (i, j) \in I_d\}$ from the rest of classes, i.e., given any sample, it determines wether the label of the sample belongs to $I_d$.
+Here, $I_d$ is the positive label set defined by the classifier $d$.
+Note that we can always define another classifier whose positive label set is exactly the negative label set of the classifier $d$.
+
+Our task is to find a subset $\mathcal{D}^* \subset \mathcal{D}$, such that for any class $A_i$, there exists a partition that divides it into some subclasses $S_i^{(l)}$ where $\bigcup_l \{A_{ij} \,|\, (i, j) \in S_i^{(l)}\} = A_i$, and for each subclass $S_i^{(l)}$ there exists a subset of classifiers $D^{(l)} \subseteq \mathcal{D}^*$ where $S_i^{(l)} = \bigcap_d \{I_d \,|\, d \in D^{(l)}\}$.
+Here, subclass $S_i^{(l)}$ represents the union of some subsets $A_{ij}$ of class $A_i$, and the union of all subclasses of $A_i$ should reconstruct the $A_i$ itself.
+The optimal set of classifiers $\mathcal{D}^*$ should allow us to determine wether a sample belongs to any given subclass $S_i^{(l)}$ using a subset $D^{(l)}$ in it, which in turn determines wether the sample belongs to $A_i$.
+
+
+There are further constraints and considerations on the optimal set of classifiers $\mathcal{D}^*$.
+\begin{itemize}
+    \item \textbf{Number of Classifiers.} We need to choose adequate number of classifiers $|\mathcal{D}^*|$ so that it covers all classes. But we prefer to use as less classifiers as possible to save computational consumptions.
+    \item \textbf{Network Size.} The size for each classifier is limited. Large networks as classifiers improve accuracy but slow down inferences. Therefore, we will have penalty for large classifiers.
+    \item \textbf{Overall Accuracy.} We know the accuracy of each classifier as a prior, but we need to derive the overall accuracy based on it. The $\mathcal{D}^*$ should optimize the overall accuracy along with other goals.
+\end{itemize}
+These are factors we will consider in the later development and we are open for other suggestions.
 
 % zxy
 \section{Related Work}
