@@ -195,9 +195,15 @@
 
 % xyc, until the last
 \section{Introduction}
+Recent years have witnessed the rapid development of deep learning(DL). Due to the irreplaceable roles of these models in data processing, it is promising to implement it on these edge device such as wearable device. However, limited energy supply and computing capabilities on edge device lead to constraint on the scale and depth of the deep learning model. Thus, light-weight models are required to fit these features of edge device. 
+	
+In this project, we propose a combination of light-weight neural networks to substitute the original large deep learning model. With this new model, we will try to reduce the parameter number and computing consumption notably at the expense of acceptable accuracy decline compared to the original large model.
 
 % xyc
 \section{Problem Description}
+We mainly deal with the issue to replace a large deep learning model with a set of small models which must be featured with less depth. Moreover, the number of small models cannot be too large. Equivalently, the sum of parameter number in all small models must be much less than the original model. Then, the total computing consumption can decrease definitely. As a result, edge device can profit from the lower demand for implementation platforms. And these small models are independent from the original deep learning network at least in the inference phase. Hence, they can process the data on the edge device without communiction with the cloud or servers, which extend the application range of these device.
+
+We will take the example of image recognition. At present, AdaBoost tends to be one possible solution. However, the weaker learners in these algorithm, which may be very simple classifiers, are so susceptible that the outcome is senstitive to noisy data and outliers. By contrast, thanks to the application of neural networks and more sophiscated combination methods, we will attempt to pursue a more robust and accurate model.
 
 % wzy
 \section{Problem Formulation}
@@ -232,7 +238,7 @@ Figure~\ref{fig:feasible-example} shows a feasible classifier set $D$ in a simpl
 There are further constraints and considerations of the optimal set of classifiers $D^*$.
 \begin{itemize}
     \item \textbf{Number of Classifiers.} We need to choose adequate number of classifiers $|D^*|$ so that it covers all classes. But we prefer to use as less classifiers as possible to save computational consumptions.
-    \item \textbf{Network Size.} The size for each classifier is limited. Large networks as classifiers improve accuracy but slow down inferences. Therefore, we will have penalty for large classifiers.
+    \item \textbf{Network Size.} The size of each classifier is limited. Large networks as classifiers improve accuracy but slow down inferences. Therefore, we will have penalty for large classifiers.
     \item \textbf{Overall Accuracy.} We know the accuracy of each classifier as a prior, but we need to derive the overall accuracy based on it. The $D^*$ should optimize the overall accuracy along with other goals.
 \end{itemize}
 These are factors we will consider in the later development and we are open for other suggestions.
