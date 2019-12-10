@@ -221,7 +221,7 @@ In this way, small models serve as feature extractors that jointly produce an em
 We can also retrieve such embedding implicitly using neural networks, but we choose to achieve the optimal embedding explicitly by solving the search problem formulated in \cref{sec:formulation}.
 
 We will take the image recognition (classification) task as the example throughout the project.
-At present, AdaBoost tends to be one possible solution.
+At present, Boosting\cite{Schapire1989The} tends to be one possible solution.
 However, the weaker learners in these algorithm, which may be very simple classifiers, are so susceptible that the outcome is sensitive to noisy data and outliers.
 By contrast, thanks to the application of neural networks and more sophisticated combination methods, we will attempt to pursue a more robust and accurate model.
 
