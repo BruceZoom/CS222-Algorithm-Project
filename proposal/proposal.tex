@@ -119,7 +119,25 @@
 %% when present, will be used in
 %% header instead of Full Title.
 
+\author{Zhongye Wang}
+\authornote{Student Number: 517030910353, Parallel Authorship}
+% \authornote{Supervised by Qinxiang Cao, Shanghai Jiao Tong University, John Hopcroft Center for Computer Science.}          %% \authornote is optional;
+%% can be repeated if necessary
+%\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+	%\position{Position2b}
+	%\department{Department2b}             %% \department is recommended
+	\institution{Shanghai Jiao Tong University}           %% \institution is required
+	%\streetaddress{Street3b Address2b}
+	%\city{City2b}
+	%\state{State2b}
+	%\postcode{Post-Code2b}
+	%\country{Country2b}                   %% \country is recommended
+}
+% \email{wangzhongye1110@sjtu.edu.cn}          %% \email is recommended
+
 \author{Yichen Xie}
+\authornote{Student Number: 517030910355, Parallel Authorship}
 % \authornote{Supervised by Qinxiang Cao, Shanghai Jiao Tong University, John Hopcroft Center for Computer Science.}          %% \authornote is optional;
 %% can be repeated if necessary
 %\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
@@ -135,23 +153,8 @@
 }
 % \email{}          %% \email is recommended
 
-\author{Zhongye Wang}
-% \authornote{Supervised by Qinxiang Cao, Shanghai Jiao Tong University, John Hopcroft Center for Computer Science.}          %% \authornote is optional;
-%% can be repeated if necessary
-%\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
-\affiliation{
-	%\position{Position2b}
-	%\department{Department2b}             %% \department is recommended
-	\institution{Shanghai Jiao Tong University}           %% \institution is required
-	%\streetaddress{Street3b Address2b}
-	%\city{City2b}
-	%\state{State2b}
-	%\postcode{Post-Code2b}
-	%\country{Country2b}                   %% \country is recommended
-}
-\email{wangzhongye1110@sjtu.edu.cn}          %% \email is recommended
-
 \author{Xinyu Zhan}
+\authornote{Student Number: 517030910358, Parallel Authorship}
 % \authornote{Supervised by Qinxiang Cao, Shanghai Jiao Tong University, John Hopcroft Center for Computer Science.}          %% \authornote is optional;
 %% can be repeated if necessary
 %\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
@@ -272,7 +275,11 @@ Instead, we need to determine the next small model to be explored during the sea
 
 % zxy
 \section{Related Work}
-
+% embedding
+As mentioned before, our approach resembles the embedding method, which is a common practice to address the curse of dimensionality, where we map data points into a subspace with reduced dimensionality and carry out the task in this space \cite{2016ml}.
+This can be accomplished with Multiple Dimension Scaling (MDS) \cite{cox2000multidimensional} or implicitly train an embedding in the hidden layers of a neural network.
+However, we explicitly search for an embedding by searching the optimal discriminator set, where each discriminator simulates one component in the embedding and we could directly obtain the category of some samples.
+It is also possible to consider more complex way of classifying using the embedding like adding another layer of network to perform the classification step, but we will stick to the current setting in the early stages of the development.
 
 %% Acknowledgments
 
