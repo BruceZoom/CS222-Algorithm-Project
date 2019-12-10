@@ -224,7 +224,7 @@ In this way, small models serve as feature extractors that jointly produce an em
 We can also retrieve such embedding implicitly using neural networks, but we choose to achieve the optimal embedding explicitly by solving the search problem formulated in \cref{sec:formulation}.
 
 We will take the image recognition (classification) task as the example throughout the project.
-At present, Boosting\cite{Schapire1989The} tends to be one possible solution.
+At present, boosting\cite{Schapire1989The} tends to be one possible solution.
 However, the weaker learners in these algorithm, which may be very simple classifiers, are so susceptible that the outcome is sensitive to noisy data and outliers.
 By contrast, thanks to the application of neural networks and more sophisticated combination methods, we will attempt to pursue a more robust and accurate model.
 
@@ -259,7 +259,7 @@ Figure~\ref{fig:feasible-example} shows a feasible classifier set $D$ in a simpl
     \label{fig:feasible-example}
 \end{figure}
 
-There are further constraints and considerations of the optimal set of classifiers $D^*$.
+There are further constraints and considerations of the optimal discriminator set $D^*$.
 \begin{itemize}
     \item \textbf{Number of Classifiers.} We need to choose adequate number of classifiers $|D^*|$ so that it covers all classes. But we prefer to use as less classifiers as possible to save computational consumptions.
     \item \textbf{Network Size.} The size of each classifier is limited. Large networks as classifiers improve accuracy but slow down inferences. Therefore, we will have penalty for large classifiers.
@@ -271,7 +271,7 @@ Beside these factors, there are other implementation issues about the solution t
 We have considered a given search space for small models, where the performance and functionality of each model is known as a prior.
 This allows us to concentrate on the search part of the solution.
 Nevertheless, we do not have such a prior in practice.
-Instead, we need to determine the next small model to be explored during the search, which we could potentially formulate as a local search problem.
+Instead, we need to determine the next small model to be explored during the search, which we could formulate as a local search problem.
 
 % zxy
 \section{Related Work}
@@ -290,13 +290,13 @@ This method was developed by Freund \textit{et al.}\cite{Freund1995A}, who propo
 Subsequent weak learners were tweaked in favor of those instances misclassified by previous classifiers. 
 Friedman \textit{et al.}\cite{FriedmanGreedy} proposed a new method called gradient boosting. 
 It performed additive optimization in functional space, which compensated for the weakness of weak classifiers in the light of the gradient of their loss function.
-
+We will consider to include their ideas to ensemble models in our discriminator set.
 
 %% Acknowledgments
 
 % Bibliography
 % \bibliographystyle{acm}
-\bibliographystyle{unsrt}
+% \bibliographystyle{unsrt}
 \bibliography{../full_list.bib}
 
 
