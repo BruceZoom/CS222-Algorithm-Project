@@ -224,7 +224,7 @@ In this way, small models serve as feature extractors that jointly produce an em
 We can also retrieve such embedding implicitly using neural networks, but we choose to achieve the optimal embedding explicitly by solving the search problem formulated in \cref{sec:formulation}.
 
 We will take the image recognition (classification) task as the example throughout the project.
-At present, AdaBoost tends to be one possible solution.
+At present, Boosting\cite{Schapire1989The} tends to be one possible solution.
 However, the weaker learners in these algorithm, which may be very simple classifiers, are so susceptible that the outcome is sensitive to noisy data and outliers.
 By contrast, thanks to the application of neural networks and more sophisticated combination methods, we will attempt to pursue a more robust and accurate model.
 
@@ -281,11 +281,22 @@ This can be accomplished with Multiple Dimension Scaling (MDS) \cite{cox2000mult
 However, we explicitly search for an embedding by searching the optimal discriminator set, where each discriminator simulates one component in the embedding and we could directly obtain the category of some samples.
 It is also possible to consider more complex way of classifying using the embedding like adding another layer of network to perform the classification step, but we will stick to the current setting in the early stages of the development.
 
+% ensemble
+A similar method that uses several weak learners to accomplish tasks is the ensemble method, which has been explored by many researchers. 
+Beriman\cite{BreimanBagging} proposed a method for generating multiple versions of a predictor by making bootstrap replicates of the learning set. 
+However, this method actually increased the amount of computation since it trained the learned repeatedly.
+Schapire\cite{Schapire1989The} proposed the boosting method to converting a weak learning algorithm into one that achieved arbitrarily high accuracy by combining a set of weak learners.
+This method was developed by Freund \textit{et al.}\cite{Freund1995A}, who proposed an adaptive version of the boost.
+Subsequent weak learners were tweaked in favor of those instances misclassified by previous classifiers. 
+Friedman \textit{et al.}\cite{FriedmanGreedy} proposed a new method called gradient boosting. 
+It performed additive optimization in functional space, which compensated for the weakness of weak classifiers in the light of the gradient of their loss function.
+
+
 %% Acknowledgments
 
 % Bibliography
 % \bibliographystyle{acm}
-% \bibliographystyle{unsrt}
+\bibliographystyle{unsrt}
 \bibliography{../full_list.bib}
 
 
