@@ -195,26 +195,47 @@
 
 % xyc, until the last
 \section{Introduction}
-Recent years have witnessed the rapid development of deep learning(DL). Due to the irreplaceable roles of these models in data processing, it is promising to implement it on these edge device such as wearable device. However, limited energy supply and computing capabilities on edge device lead to constraint on the scale and depth of the deep learning model. Thus, light-weight models are required to fit these features of edge device. 
-	
-In this project, we propose a combination of light-weight neural networks to substitute the original large deep learning model. With this new model, we will try to reduce the parameter number and computing consumption notably at the expense of acceptable accuracy decline compared to the original large model.
+% Recent years have witnessed the rapid development of deep learning.
+The development of deep learning has proved its great capability, and it will be more beneficial if we can plant deep learning models into edge devices like wearable devices.
+However, the limited energy supply and computational capability of edge devices lead to constraints on the scale and complexity of deep neural networks.
+We need light-weight models to meet these requirements of edge device.
+In this project, we will seek for a combination of light-weight neural networks to substitute the original complex model while preserving its functionality.
+% With this new model, we will try to reduce the parameter number and computing consumption notably at the expense of acceptable accuracy decline compared to the original large model.
 
 % xyc
 \section{Problem Description}
-We mainly deal with the issue to replace a large deep learning model with a set of small models which must be featured with less depth. Moreover, the number of small models cannot be too large. Equivalently, the sum of parameter number in all small models must be much less than the original model. Then, the total computing consumption can decrease definitely. As a result, edge device can profit from the lower demand for implementation platforms. And these small models are independent from the original deep learning network at least in the inference phase. Hence, they can process the data on the edge device without communiction with the cloud or servers, which extend the application range of these device.
+We mainly focus on the task to replace a large deep learning model with a set of small models with reduced complexity.
+Using too many small models can still result in tremendous amount of calculation in inference and affect models' performance in edge devices, so we limit the overall complexity of models as well.
+% Then, the total computational consumption can decrease definitely.
+As a result, edge device can profit from the lowered demand for computational consumption.
+% And these small models are independent from the original deep learning network at least in the inference phase.
+% Hence, they can process the data on the edge device without communication with the cloud or servers, which extend the application range of these device.
 
-We will take the example of image recognition. At present, AdaBoost tends to be one possible solution. However, the weaker learners in these algorithm, which may be very simple classifiers, are so susceptible that the outcome is senstitive to noisy data and outliers. By contrast, thanks to the application of neural networks and more sophiscated combination methods, we will attempt to pursue a more robust and accurate model.
+There are many possible approaches in the design of small model system.
+\begin{itemize}
+  \item We could train small models each with specific tasks, which can be implemented with satisfying performance and simple network structure.
+  \item We could train small models each dealing with part of the dataset, which can be combined to handle all data points efficiently.
+\end{itemize}
+Our focus will be the former one, where we want each model to perform binary decisions in the context of classification and the union of these models should uniquely determine the category of any sample.
+In this way, small models serve as feature extractors that jointly produce an embedding for the data sample.
+We can also retrieve such embedding implicitly using neural networks, but we choose to achieve the optimal embedding explicitly by solving the search problem formulated in \cref{sec:formulation}.
+
+We will take the image recognition (classification) task as the example throughout the project.
+At present, AdaBoost tends to be one possible solution.
+However, the weaker learners in these algorithm, which may be very simple classifiers, are so susceptible that the outcome is sensitive to noisy data and outliers.
+By contrast, thanks to the application of neural networks and more sophisticated combination methods, we will attempt to pursue a more robust and accurate model.
 
 % wzy
 \section{Problem Formulation}
-There has not been much time for us to fully consider the optimal way of addressing those problems, but we do propose one possible formulation and the solution idea in this section.
+\label{sec:formulation}
+There has not been much time for us to fully consider the optimal way of addressing the problem, but we do propose one possible formulation and some solution ideas in this section.
 
 Assume there are $N$ classes in total, each denoted by $A_i$.
 We further divide each class $A_i$ into $M_i$ subsets $A_{ij}$ according to some features of samples, e.g., the activation of certain convolution filters.
 Now, we have a set $\mathcal{D}$ of $K$ (a relatively large number) binary classifiers each identifying a subset of all $A_{ij}$ classes.
 Say classifier $d$ separates $\{A_{ij} \,|\, (i, j) \in I_d\}$ from the rest of classes, i.e., given any sample, it determines wether the label of the sample belongs to $I_d$.
 Here, $I_d$ is the positive label set defined by the classifier $d$.
-Note that we can always define another classifier whose positive label set is exactly the negative label set of the classifier $d$.
+Note that we can always define a compliment classifier whose positive label set is exactly the negative label set of the classifier $d$.
 
 Our task is to find a subset $D^* \subset \mathcal{D}$, such that for any class $A_i$, there exists a partition that divides it into some subclasses $S_i^{(l)}$ where $A_i = \bigcup_l \{A_{ij} \,|\, (i, j) \in S_i^{(l)}\}$, and for each subclass $S_i^{(l)}$ there exists a subset of classifiers $D^{(l)} \subseteq D^*$ where $S_i^{(l)} = \bigcap_d \{I_d \,|\, d \in D^{(l)}\}$.
 Here, subclass $S_i^{(l)}$ represents the union of some subsets $A_{ij}$ of class $A_i$, and the union of all subclasses of $A_i$ should reconstruct the $A_i$ itself.
@@ -242,6 +263,12 @@ There are further constraints and considerations of the optimal set of classifie
     \item \textbf{Overall Accuracy.} We know the accuracy of each classifier as a prior, but we need to derive the overall accuracy based on it. The $D^*$ should optimize the overall accuracy along with other goals.
 \end{itemize}
 These are factors we will consider in the later development and we are open for other suggestions.
+
+Beside these factors, there are other implementation issues about the solution to the problem.
+We have considered a given search space for small models, where the performance and functionality of each model is known as a prior.
+This allows us to concentrate on the search part of the solution.
+Nevertheless, we do not have such a prior in practice.
+Instead, we need to determine the next small model to be explored during the search, which we could potentially formulate as a local search problem.
 
 % zxy
 \section{Related Work}
