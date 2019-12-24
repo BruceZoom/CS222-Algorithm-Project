@@ -95,11 +95,12 @@
 \crefformat{subsection}{\S#2#1#3}
 \crefformat{subsubsection}{\S#2#1#3}
 
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 
 \begin{document}
 
 %% Title information
-\title[]{Network Reformation and Fusion through CDRP Model Decomposition and Assembly}         %% [Short Title] is optional;
+\title[Network Fusion through CDRP Model Decomposition and Assembly]{Network Fusion through CDRP Model\\ Decomposition and Assembly}         %% [Short Title] is optional;
 %% when present, will be used in
 %% header instead of Full Title.
 %\titlenote{ }             %% \titlenote is optional;
@@ -207,6 +208,53 @@ The introduction \dots
 
 \section{CDRP Model Assembly}
 \subsection{The Assembly Problem}
+For a clear formulation, we define the input of a problem instance to have the following components:
+\begin{itemize}
+	\item $L$ class labels, denoted $\{l_j\}$
+	\item $N$ subclasses in total \begin{itemize}
+		\item $M$ target subclasses, denoted $\mathcal{A} = \{A_i\}$
+		\item $N-M$ dummy subclasses (with irrelevant class labels), denoted $\bar{\mathcal{A}} = \{A_i\}$
+	\end{itemize}
+	\item $g(A_i) := l_j$ the partial map from $A_i$ to class label $l_j$
+	\item $K$ classifiers, denoted $\mathcal{D} = \{d_j\}$
+	\item $f(A_i, d_j) := 0, 1$ the classifier certificate that $A_i$ is classified positive in classifier $d_j$
+	\item $score(d_j)$ the accuracy(?) of classifier $d_j$
+	\item $k$ the maximum number of classifier to use
+\end{itemize}
+
+The solution to the instance should contain:
+\begin{itemize}
+	\item $D \subset \mathcal{D}$ a set of $m$ classifiers \textit{covering} all $M$ target subclasses s.t. $m < k$
+	\item $score(D)$ the overall accuracy(?) of the classifier set
+\end{itemize}
+
+We define the concept of \textit{covering} as follows.
+\begin{definition}
+	A set of classifiers covers $M$ target subclasses iff. given any sample, the joint classifier can determine whether it \textit{solely} belongs to \begin{enumerate}
+		\item a subset (with consistent labels) of the $M$ target subclasses, or,
+		\item the rest dummy subclasses $\bar{\mathcal{A}}$.
+	\end{enumerate}
+\end{definition}
+
+We start with analyzing the intractability of the problem.
+\begin{theorem}
+	The assembly problem is an NP problem.
+\end{theorem}
+\begin{proof}
+We prove the theorem by giving a polynomial algorithm for the certificate problem.
+
+Given a certificate $D \subset \mathcal{D}$, we encode each subclass with a binary string $s$ of length $k$, where the $j$-th element for the $i$ subclass is $f(A_i, d_j)$ ($d_j \in D$).
+This step takes $O(Nk) = O(NK)$ time.
+The algorithm returns $yes$ iff. \begin{enumerate}
+	\item No two subclasses in $\mathcal{A}$ share the same encoding but have different labels, and,
+	\item No subclass in $\mathcal{A}$ shares the same encoding with any subclass in $\bar{\mathcal{A}}$.
+\end{enumerate}
+Otherwise, it returns $no$.
+This step takes $O(N)$ if we use hash table to record the occurrence of encoded strings.
+
+% TODO: correctness proof
+\todo{More proof of the algorithm's correctness}
+\end{proof}
 
 \subsection{The Algorithm}
 
