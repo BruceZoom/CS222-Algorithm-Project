@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.utils import shuffle
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
 
 # ================== VGG Network Model with Control Gates ==================
 class Model():
@@ -54,6 +54,7 @@ class Model():
     def encode_class_data(self, class_id , train_images):
         # filename = "./innerclass/class"+str(class_id)+"gate.json"
         for i in range(len(train_images)):
+            print('{}/{}'.format(i, len(train_images)))
             generatedGate = self.compute_encoding(train_images[i].reshape((1,32,32,3))) # generatedGate is a list of dicts{layername:xx, shape:xx, lambda:xx}
             picname = "class" + str(class_id) + "-pic" + str(i)
             jsonpath = "./ImageEncoding/" + picname + ".json"
@@ -234,8 +235,8 @@ class Model():
                 self.penalty : L1_loss_penalty
             })
 
-            print("Epoch: {}: Cross_Entropy: {}, L1_loss: {}, Accuracy: {}".format(
-                epoch, cross_entropy, L1_loss, accuracy))
+            # print("Epoch: {}: Cross_Entropy: {}, L1_loss: {}, Accuracy: {}".format(
+                # epoch, cross_entropy, L1_loss, accuracy))
 
             # print(self.AllGateVariables.keys())
             '''

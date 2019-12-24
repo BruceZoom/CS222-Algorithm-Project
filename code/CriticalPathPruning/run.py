@@ -32,7 +32,7 @@ layer_names = ['FC14/gate:0',
 ]
 
 
-def calculate_total_by_threshold(classid):
+def calculate_total_by_threshold(classid, size=500):
 	name_shape_match = [
 		{'name': 'FC14/gate:0', 'shape': 4096}, 
 		{'name': 'Conv7/composite_function/gate:0', 'shape': 256}, 
@@ -52,7 +52,7 @@ def calculate_total_by_threshold(classid):
 	]
 	for i in range(len(name_shape_match)):
 		name_shape_match[i]['shape'] = name_shape_match[i]['shape']*[0]
-	for i in range(499):
+	for i in range(size):
 		jsonpath = "./ImageEncoding/class" + str(classid) + "-pic" + str(i) + ".json"
 		with open(jsonpath,'r') as f:
 			dataset = json.load(f)
@@ -71,7 +71,7 @@ def calculate_total_by_threshold(classid):
 	with open(json_write_path,'w') as g:
 		json.dump(name_shape_match,g,sort_keys=True, indent=4, separators=(',', ':'))
 
-def calculate_total_by_weights(classid):
+def calculate_total_by_weights(classid, size=500):
 	name_shape_match = [
 		{'name': 'FC14/gate:0', 'shape': 4096}, 
 		{'name': 'Conv7/composite_function/gate:0', 'shape': 256}, 
@@ -91,7 +91,7 @@ def calculate_total_by_weights(classid):
 	]
 	for i in range(len(name_shape_match)):
 		name_shape_match[i]['shape'] = name_shape_match[i]['shape']*[0]
-	for i in range(499):
+	for i in range(size):
 		jsonpath = "./ImageEncoding/class" + str(classid) + "-pic" + str(i) + ".json"
 		with open(jsonpath,'r') as f:
 			dataset = json.load(f)
@@ -113,11 +113,13 @@ model = Model(
     L1_loss_penalty = L1_loss_penalty,
     threshold = threshold
 ) 
-def run():
+def run(size=500):
     # choose class data
-    train_images, train_labels = d.train.generateSpecializedData(class_id = 1, count = 5)
-    model.encode_class_data(1, train_images)
-    calculate_total_by_weights(1)
+	for i in range(100):
+		train_images, train_labels = d.train.generateSpecializedData(class_id = i, count = size)
+		model.encode_class_data(i, train_images)
+		calculate_total_by_weights(i, size=size)
 
-run()
+run(500)
 
+# calculate_total_by_weights(1, 5)
