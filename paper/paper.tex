@@ -90,10 +90,15 @@
 
 \usepackage{hyperref}
 \usepackage{cleveref}
-
 \crefformat{section}{\S#2#1#3} % see manual of cleveref, section 8.2.1
 \crefformat{subsection}{\S#2#1#3}
 \crefformat{subsubsection}{\S#2#1#3}
+
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
 
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 
@@ -252,8 +257,40 @@ The algorithm returns $yes$ iff. \begin{enumerate}
 Otherwise, it returns $no$.
 This step takes $O(N)$ if we use hash table to record the occurrence of encoded strings.
 
-% TODO: correctness proof
-\todo{More proof of the algorithm's correctness}
+% \begin{algorithm}[h]
+% 	\caption{}
+% 	\begin{algorithmic}
+% 		\Require A assembly problem instance $k$; a certificate $D \subset \mathcal{D}$.
+% 		\Ensure Whether problem instance $k$ is solvable.
+% 		\State initialize a hash table $H$ with default value -1;
+% 		\For{$i = 1, \cdots, N$}
+% 			\For{$d_j \in D$}
+% 				\State $s_{i,j} \leftarrow f(A_i, d_j)$;
+% 			\EndFor
+% 			\If{$H[s_i]$ != $g(A_i)$}
+% 				\State \Return $no$
+% 			\ElsIf{$H[s_i]$ == -1}
+% 				\State a
+% 			\EndIf
+% 		\EndFor
+% 	\end{algorithmic}
+% \end{algorithm}
+
+We then show the algorithm returns $yes$ iff. $D$ is a certificate to the problem.
+\begin{enumerate}
+	\item[$\Rightarrow$:]
+	The encoding for each target subclass is different from that of another subclass having different labels, meaning the classifier set can distinguish them from subclasses with other labels, and it is then clear that $D$ covers all target subclasses.
+	\item[$\Leftarrow$:]
+	Assume the algorithm returns $no$, then
+	\begin{enumerate}
+		\item Two subclasses with different labels share the same encoding, i.e., the classifier set cannot determine which label to assign for both subclasses, which violates the first condition of the "covering";
+		\item Some target subclass (with meaningful label) share the same encoding with some dummy subclasses.
+		The classifier set cannot determine whether samples of the target subclass belong to the dummy class or not, which violates the second condition.
+	\end{enumerate}
+	Therefor, $D$ is not a certificate to the problem.
+\end{enumerate}
+As a result, the problem instance $k$ is solvable iff. there exists a $D$ with size $k$ such that the algorithm returns $yes$.
+By definition, the problem is an NP problem.
 \end{proof}
 
 \subsection{The Algorithm}
