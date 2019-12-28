@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import json
 from CIFAR_DataLoader import CifarDataManager, display_cifar
 from vggNet import Model, NameMapping
@@ -29,7 +30,7 @@ layer_names = ['FC14/gate:0',
                ]
 
 
-def calculate_total_by_threshold(classid, size=500):
+def calculate_total_by_threshold(classid, size=500, dataset='cifar'):
     name_shape_match = [
         {'name': 'FC14/gate:0', 'shape': 4096},
         {'name': 'Conv7/composite_function/gate:0', 'shape': 256},
@@ -69,7 +70,7 @@ def calculate_total_by_threshold(classid, size=500):
         json.dump(name_shape_match, g, sort_keys=True, indent=4, separators=(',', ':'))
 
 
-def calculate_total_by_weights(classid, size=500):
+def calculate_total_by_weights(classid, size=500, dataset='cifar'):
     name_shape_match = [
         {'name': 'FC14/gate:0', 'shape': 4096},
         {'name': 'Conv7/composite_function/gate:0', 'shape': 256},
@@ -90,7 +91,14 @@ def calculate_total_by_weights(classid, size=500):
     for i in range(len(name_shape_match)):
         name_shape_match[i]['shape'] = name_shape_match[i]['shape'] * [0]
     for i in range(size):
-        jsonpath = "./ImageEncoding/class" + str(classid) + "-pic" + str(i) + ".json"
+        if dataset == 'cifar':
+            if not os.path.exists('ImageEncoding'):
+                os.mkdir('ImageEncoding')
+            jsonpath = "./ImageEncoding/class" + str(classid) + "-pic" + str(i) + ".json"
+        else:
+            if not os.path.exists(dataset + "-ImageEncoding"):
+                os.mkdir(dataset + "-ImageEncoding")
+            jsonpath = "./" + dataset + "-ImageEncoding/class" + str(classid) + "-pic" + str(i) + ".json"
         with open(jsonpath, 'r') as f:
             dataset = json.load(f)
             for gate in range(len(dataset)):
@@ -101,7 +109,14 @@ def calculate_total_by_weights(classid, size=500):
                             name_shape_match[index]['shape'][conv] += tmp[conv]
                     else:
                         pass
-    json_write_path = "./ClassEncoding/class" + str(classid) + ".json"
+    if dataset == 'cifar':
+        if not os.path.exists('ClassEncoding'):
+            os.mkdir('ClassEncoding')
+        json_write_path = "./ClassEncoding/class" + str(classid) + ".json"
+    else:
+        if not os.path.exists(dataset + "-ClassEncoding"):
+            os.mkdir(dataset + "-ClassEncoding")
+        json_write_path = "./" + dataset + "-ClassEncoding/class" + str(classid) + ".json"
     with open(json_write_path, 'w') as g:
         json.dump(name_shape_match, g, sort_keys=True, indent=4, separators=(',', ':'))
 
@@ -165,4 +180,4 @@ if __name__ == '__main__':
                                     use_batch_norm=False, with_bias=True, vgg_type='D', output_size=1000,
                                     dataset_name='imagenet', verbose=args.verbose)
         print("Encoding class...")
-        calculate_total_by_weights(i, size=args.max_samples)
+        calculate_total_by_weights(i, size=args.max_samples, dataset=args.dataset)
