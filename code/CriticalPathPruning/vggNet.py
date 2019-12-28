@@ -376,9 +376,9 @@ class Model():
                 continue
 
             ## Original version: only accept those that are still correct
-            # if accuracy > 0.99 and L1_loss != 'nan' and L1_loss < 1000:
+            if accuracy > 0.99 and L1_loss != 'nan' and L1_loss < 1000:
             ## In another network without correct labels
-            if L1_loss != 'nan' and L1_loss < 1000:
+            # if L1_loss != 'nan' and L1_loss < 1000:
                 if self.verbose:
                     print("Assign gate")
                 generateGate = newGate
