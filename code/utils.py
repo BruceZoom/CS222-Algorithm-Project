@@ -79,6 +79,10 @@ def update_layer2idx():
     print(layer2idx)
 
 
+def normalize(x, lim):
+    return (x - x.min()) / (x.max() - x.min()) * (lim[1] - lim[0]) + lim[0]
+
+
 if __name__ == '__main__':
     data, labels, sample_names = load_data(classes=['class0', 'class1', 'class2', 'class3', 'class4', ])
     print(data.shape, labels.shape)
