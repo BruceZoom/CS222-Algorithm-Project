@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import argparse
 
 # layer names are sorted
 layer2idx = {
@@ -83,11 +84,40 @@ def normalize(x, lim):
     return (x - x.min()) / (x.max() - x.min()) * (lim[1] - lim[0]) + lim[0]
 
 
+def bool_string(s):
+    s = str.lower(s)
+    assert s in ["true", "false"], "The bool value can only be 'True' or 'False'."
+    return s == "true"
+
+
 if __name__ == '__main__':
-    data, labels, sample_names = load_data(classes=['class0', 'class1', 'class2', 'class3', 'class4', ])
+    parser = argparse.ArgumentParser("Utils")
+    parser.add_argument("prog", help="One of the 'CvtTxt'.", type=str)
+    parser.add_argument(
+        "--encoding_dir", help="Encoding directory.",
+        default="CriticalPathPruning/ImageEncoding", type=str)
+    parser.add_argument(
+        "--save_dir", help="The directory to save converted data.",
+        default="data", type=str)
+    parser.add_argument(
+        "--conv_only", help="Only save the convolution layers.",
+        default="False", type=bool_string)
+    parser.add_argument(
+        "--begin", help="The index of the class to begin.",
+        default=0, type=int)
+    parser.add_argument(
+        "--end", help="The index of the class to end.",
+        default=500, type=int)
+    args = parser.parse_args()
+
+    data, labels, sample_names = load_data(root=args.encoding_dir,
+                                           classes=['class{}'.format(i) for i in range(args.begin, args.end)])
     print(data.shape, labels.shape)
     print(np.histogram(labels, bins=np.unique(labels).shape[0]))
-    to_txt("./data", data, labels)
+    if args.conv_only:
+        to_txt(args.save_dir, data[:, :layer2idx['FC14'][0]], labels)
+    else:
+        to_txt(args.save_dir, data, labels)
 
     # update_layer2idx()
     pass
