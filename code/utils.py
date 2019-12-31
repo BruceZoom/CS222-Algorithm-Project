@@ -55,12 +55,18 @@ def load_data(root="CriticalPathPruning/ImageEncoding", classes=None):
             with open(os.path.join(path, fname), "r") as f:
                 res = json.load(f)
             tmp = []
-            res.sort(key=lambda item: item["layer_name"])
+            res = sorted(res, key=lambda item: item["layer_name"])
             for layer in res:
                 tmp += layer["layer_lambda"]
-            data.append(tmp)
-            labels.append(int(class_id[5:]))
+            # assert len(tmp) == 12416, fname + " is bad shaped."
             sample_names.append(fname)
+            if len(tmp) != 12416:
+                print(fname + " is bad shaped.")
+                data.append(np.array(data[-1][:]))
+                labels.append(labels[-1])
+                continue
+            data.append(np.array(tmp))
+            labels.append(int(class_id[5:]))
     return np.array(data), np.array(labels), sample_names
 
 
