@@ -1,9 +1,11 @@
 import os
-
 import imageio
-import matplotlib.pyplot as plt
 import numpy as np
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from utils import *
 
@@ -79,6 +81,24 @@ def pca_isolation_gif(data_path="data/data.txt", label_path="data/labels.txt", d
                gif_name, duration, extend=True)
 
 
+def plot_3d_cluster(data, labels, target, n_cluster):
+    fig = plt.figure()
+    ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
+
+    X = data[labels == target, :]
+
+    pca = PCA(n_components=3)
+    data_pca = pca.fit_transform(X)
+
+    kmeans = KMeans(n_clusters=n_cluster, random_state=0, n_jobs=-1, verbose=1).fit(X)
+    centers = pca.transform(kmeans.cluster_centers_)
+
+    for label in np.unique(kmeans.labels_):
+        mask = (kmeans.labels_ == label)
+        plt.scatter(data_pca[mask, 0], data_pca[mask, 1], data_pca[mask, 2], label="cluster " + str(int(label)))
+    plt.scatter(centers[:, 0], centers[:, 1], centers[:, 2], marker='s', label='centers', c='b')
+
+
 def run_pca_gif():
     flips = [
         [],  # 1
@@ -112,6 +132,14 @@ def run_pca_gif():
     ])
     rotates = rotates / 180 * np.pi
     pca_isolation_gif(flips=flips, rotates=rotates)
+
+
+def run_plot_3d_cluster(data_path="data/data.txt", label_path="data/labels.txt"):
+    print("Importing data...")
+    data = np.loadtxt(data_path)
+    print("Importing labels...")
+    labels = np.loadtxt(label_path)
+    plot_3d_cluster(data, labels, 4, 3)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,9 @@ class SubclassEncoder(object):
             cluster_cnts = np.histogram(kmeans.labels_, bins=len(np.unique(kmeans.labels_)))[0]
             print(cluster_cnts)
             kmeans.cluster_centers_ = kmeans.cluster_centers_[cluster_cnts > 10]
-            elim_labels = np.where(cluster_cnts <= 10)[0]
+            elim_labels = np.where(cluster_cnts <= 10)
+            if type(elim_labels) is tuple and len(elim_labels) == 1:
+                elim_labels = elim_labels[0]
             print(elim_labels)
             for label in elim_labels:
                 print(kmeans.labels_, label)
@@ -63,7 +65,7 @@ if __name__ == '__main__':
         default="data/sub_encoding.txt", type=str)
     parser.add_argument(
         "--cluster_per_class", help="Clusters per class.",
-        default=2, type=int)
+        default=2, type=float)
     parser.add_argument(
         "--threshold", help="Minimum samples a cluster should have.",
         default=None, type=float)

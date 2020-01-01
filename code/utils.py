@@ -109,10 +109,10 @@ if __name__ == '__main__':
         "--conv_only", help="Only save the convolution layers.",
         default="False", type=bool_string)
     parser.add_argument(
-        "--begin", help="The index of the class to begin.",
+        "--begin", help="The index of the class to begin. Inclusive.",
         default=0, type=int)
     parser.add_argument(
-        "--end", help="The index of the class to end.",
+        "--end", help="The index of the class to end. Exclusive",
         default=500, type=int)
     args = parser.parse_args()
 
