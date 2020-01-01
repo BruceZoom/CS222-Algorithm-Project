@@ -1,9 +1,13 @@
 data/
 .idea/
+*.html
+*checkpoint*
 
 # CriticalPathPruning
-ClassEncoding/
-ImageEncoding/
+*encoding*
+*encoding*/
+vgg-imagenet/
+vgg/
 cifar-100-python/
 vggNet/
 
