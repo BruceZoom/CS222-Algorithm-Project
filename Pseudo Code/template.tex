@@ -1,0 +1,114 @@
+%!TEX program = Xelatex
+\documentclass{article}
+\usepackage{amsmath,amscd,amsbsy,amssymb,latexsym,url,bm,amsthm}
+\usepackage{epsfig,graphicx,subfigure}
+\usepackage{enumitem,balance,mathtools}
+\usepackage{wrapfig}
+\usepackage{mathrsfs, euscript}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage[ruled,lined,boxed,linesnumbered]{algorithm2e}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}{Exercise}[section]
+\newtheorem*{solution}{Solution}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\newcommand{\postscript}[2]
+    {\setlength{\epsfxsize}{#2\hsize}
+    \centerline{\epsfbox{#1}}}
+\renewcommand{\baselinestretch}{1.0}
+
+\setlength{\oddsidemargin}{-0.365in}
+\setlength{\evensidemargin}{-0.365in}
+\setlength{\topmargin}{-0.3in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{10.1in}
+\setlength{\textwidth}{7in}
+
+\begin{document}
+
+
+% ------------------ your name and number ----------------- %
+
+% --------------------------------------------------------- %
+\begin{itemize}
+\item $U$: used classifiers $(d_{i})$
+\item $R_i$: coding results: $(r_{i_1},r_{i_2},\cdots,r_{i_{n}}),r_i\in\{0,1\}$
+\item $Pos_i$: Remaining labels if result of $d_i$ is $1$
+\item $Neg_i$: Remaining labels if result of $d_i$ is $0$
+\item $C$: array of coding results $(R_1,R_2,\cdots,R_m)$
+\item $E$: Remaining labels of each coding in $C$: $(\{l_j\}),|C|=|R|$
+\item $m_i$: possibility of result $r_i$:
+$$
+m_i=\left\{
+\begin{array}{cc}
+\frac{2}{K} & r_i=1, positive\\
+\frac{K-2}{K} & r_i=0, negative\\
+1 & r_i=2, meaningless\\
+\end{array}
+\right.
+$$
+
+\item $a=(a_1,a_2)$: concatenation of two arrays
+
+\end{itemize}
+
+\begin{algorithm}
+\caption{}
+$U=\phi$\\
+$Entropy\leftarrow \sum_{i=1}^{L}\frac{1}{L}\log\frac{1}{L}=L$\\
+\While {$Entropy>0$}{
+	$min\leftarrow\infty$\\
+	\ForEach {$d_i\in D-U$}{
+			$S,T\leftarrow Split(E,C,d_i)$\\
+
+			\ForEach{$i\in\{1,2,\cdots,|S|\}$}{
+				$p_i=\prod_{j=1}^{|T_i|}m_{T_i^j}$\\
+			}
+			$e_i\leftarrow\sum_{j=1}^{|S_i|}\frac{1}{|S_i|}\log\frac{1}{|S_i|}=S_i$\\
+			$H\leftarrow\sum_{j=1}^{|S|}p_je_j$\\
+			\If{$H<min$}{
+				$S_{min}\leftarrow S$\\
+				$T_{min}\leftarrow T$\\
+				$k\leftarrow i$\\
+				$min\leftarrow H$\\
+			}
+	}
+	$Entropy\leftarrow min$\\
+	$E\leftarrow S_{min}$\\
+	$C\leftarrow T_{min}$\\
+	$U\leftarrow (U,d_k)$\\
+}
+
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{$Split(E,C,d_i)$}
+$S\leftarrow$ Empty Array\\
+$T\leftarrow$ Empty Array\\
+\ForEach{$E_i\in E$}{
+	\If {$Pos_i\cap E_i=\phi$ or $Neg_i\cap E_i=\phi$}{
+		$S\leftarrow S+\{E_i\}$\\
+		$T_0\leftarrow (C_i,2)$\\
+		$T\leftarrow (T,(T_0))$\\
+	}
+	\Else{
+		$S\leftarrow S+\{E_i\}\cap Pos_i$\\
+		$T_0\leftarrow (C_i,1)$\\
+		$T\leftarrow (T,(T_0))$\\
+		$S\leftarrow S+\{E_i\}\cap Neg_i$\\
+		$T_0\leftarrow (C_i,0)$\\
+		$T\leftarrow (T,(T_0))$\\
+	}
+\Return $S,T$\\
+}
+
+\end{algorithm}
+
+\end{document}
