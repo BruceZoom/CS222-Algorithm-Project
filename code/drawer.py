@@ -1,6 +1,7 @@
 import os
 import imageio
 import numpy as np
+import networkx as nx
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -99,6 +100,45 @@ def plot_3d_cluster(data, labels, target, n_cluster):
     plt.scatter(centers[:, 0], centers[:, 1], centers[:, 2], marker='s', label='centers', c='b')
 
 
+def plot_network_venn(data, subclasses, cluster_sets, ncol):
+    count = lambda x: sum((data[:, 0] == x[0]) & (data[:, 1] == x[1]))
+    per_col = np.ceil(subclasses.shape[0] / ncol)
+    labels = subclasses[:, -1]
+    subclasses = subclasses[:, :-1]
+    stride = 15 * 0.5 / per_col
+    markers = dict()
+    cluster_markers = dict()
+
+    G = nx.Graph()
+    cl_pos = dict()
+    cmap = ['b', 'g']
+    for i, subclass in enumerate(subclasses):
+        for j, cl in enumerate(subclass):
+            plt.plot([1 + 1 * (i // per_col), j * 4], [stride * (i % per_col) - 0.5, cl * 1],
+                     c=plt.cm.Blues(j * 0.4 + 0.4))
+    for i, subclass in enumerate(subclasses):
+        G.add_node(i, encoding=subclass, size=count(subclass) * 5 + 200, shape='skyblue',
+                   pos=(1 + 1 * (i // per_col) - 0.2, stride * (i % per_col) - 0.5))
+        markers[int(labels[i])], = plt.plot(1 + 1 * (i // per_col), stride * (i % per_col) - 0.5, marker='o', ms=5,
+                                            c=plt.cm.winter(labels[i] / labels.max()))
+        plt.plot(1 + 1 * (i // per_col), stride * (i % per_col) - 0.5, marker='o', ms=count(subclass) / 10 + 5,
+                 c=plt.cm.winter(labels[i] / labels.max()))
+    for i, clusters in enumerate(cluster_sets):
+        for cl in clusters:
+            G.add_node('{:.0f}-{:.0f}'.format(i, cl), encoding=None, size=500, shape='orangered', pos=(i * 4, cl * 1))
+            cluster_markers[i], = plt.plot(i * 4, cl * 1, ms=5, marker='s', c=plt.cm.Blues(i * 0.3 + 0.3))
+            plt.plot(i * 4, cl * 1, ms=25, marker='s', c=plt.cm.Blues(i * 0.3 + 0.3))
+
+    nx.draw_networkx(G, node_size=0, pos=G.nodes(data='pos'))
+    lines = list(markers.values()) + list(cluster_markers.values())
+    labels = ['class {}'.format(label) for label in markers.keys()] + ['model {}'.format(label) for label in
+                                                                       cluster_markers.keys()]
+    plt.legend(lines, labels, loc=1, ncol=1, bbox_to_anchor=(0.9, 1))
+    plt.xticks([], [])
+    plt.yticks([], [])
+    plt.tight_layout()
+
+
 def run_pca_gif():
     flips = [
         [],  # 1
@@ -134,7 +174,7 @@ def run_pca_gif():
     pca_isolation_gif(flips=flips, rotates=rotates)
 
 
-def run_plot_3d_cluster(data_path="data/data.txt", label_path="data/labels.txt"):
+def run_3d_cluster(data_path="data/data.txt", label_path="data/labels.txt"):
     print("Importing data...")
     data = np.loadtxt(data_path)
     print("Importing labels...")
@@ -142,5 +182,15 @@ def run_plot_3d_cluster(data_path="data/data.txt", label_path="data/labels.txt")
     plot_3d_cluster(data, labels, 4, 3)
 
 
+def run_network_venn(encoding_path="data/encoding_merged.txt", threshold=6, ncol=3):
+    data = np.loadtxt(encoding_path)
+    subclasses, freq = np.unique(list(data[:, :]), axis=0, return_counts=True)
+    tmp = subclasses[freq > threshold]
+    tmp = np.array(sorted(list(tmp), key=lambda x: x[-1]))
+    plot_network_venn(data, tmp, [np.unique(tmp[:, i]) for i in range(tmp.shape[1] - 1)], ncol)
+
+
 if __name__ == '__main__':
-    run_pca_gif()
+    # run_pca_gif()
+    run_network_venn()
+    plt.show()
