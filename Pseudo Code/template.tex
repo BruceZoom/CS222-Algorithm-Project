@@ -37,52 +37,53 @@
 
 % --------------------------------------------------------- %
 \begin{itemize}
-\item $U$: used classifiers $(d_{i})$
-\item $R_i$: coding results: $(r_{i_1},r_{i_2},\cdots,r_{i_{n}}),r_i\in\{0,1\}$
+\item $U$: used classifiers: $(d_{i})$
+
+
 \item $Pos_i$: Remaining labels if result of $d_i$ is $1$
 \item $Neg_i$: Remaining labels if result of $d_i$ is $0$
-\item $C$: array of coding results $(R_1,R_2,\cdots,R_m)$
-\item $E$: Remaining labels of each coding in $C$: $(\{l_j\}),|C|=|R|$
-\item $m_i$: possibility of result $r_i$:
+\item $R_i$: code: array $(r_{i_1},r_{i_2},\cdots,r_{i_{n}}),r_i\in\{0,1,2\}$
 $$
-m_i=\left\{
+r_i=\left\{
 \begin{array}{cc}
-\frac{2}{K} & r_i=1, positive\\
-\frac{K-2}{K} & r_i=0, negative\\
-1 & r_i=2, meaningless\\
+1 & result\ of\ d_i\ is\ true\\
+0 & result\ of\ d_i\ is\ false\\
+2 & d_i\ can\ only\ be\ true\ or\ false\ theoretically\\
 \end{array}
 \right.
 $$
-
-\item $a=(a_1,a_2)$: concatenation of two arrays
+\item $C$: array of codes $(R_1,R_2,\cdots,R_m)$
+\item $E$: Remaining labels of each code in $C$: $(\{l_j\}),|C|=|R|$
 
 \end{itemize}
 
 \begin{algorithm}
 \caption{}
-$U=\phi$\\
-$Entropy\leftarrow \sum_{i=1}^{L}\frac{1}{L}\log\frac{1}{L}=L$\\
+$U=\phi$;\\
+$Entropy\leftarrow -\sum_{i=1}^{L}\frac{1}{L}\log\frac{1}{L}=logL$;\\
 \While {$Entropy>0$}{
-	$min\leftarrow\infty$\\
+	$min\leftarrow\infty$;\\
 	\ForEach {$d_i\in D-U$}{
-			$S,T\leftarrow Split(E,C,d_i)$\\
+			$S,T\leftarrow Split(E,C,d_i)$\tcp*[r]{if we choose $d_i$ as new classifier, renew the code and result}
 
 			\ForEach{$i\in\{1,2,\cdots,|S|\}$}{
-				$p_i=\prod_{j=1}^{|T_i|}m_{T_i^j}$\\
+				$p_i=\prod_{j=1}^{|T_i|}m_{T_i^j}$ \tcp*[r]{probability of result $T_i$}
 			}
-			$e_i\leftarrow\sum_{j=1}^{|S_i|}\frac{1}{|S_i|}\log\frac{1}{|S_i|}=S_i$\\
-			$H\leftarrow\sum_{j=1}^{|S|}p_je_j$\\
+			$e_i\leftarrow-\sum_{j=1}^{|S_i|}\frac{1}{|S_i|}\log\frac{1}{|S_i|}$;\\
+			$H\leftarrow\sum_{j=1}^{|S|}p_je_j$;\\
 			\If{$H<min$}{
-				$S_{min}\leftarrow S$\\
-				$T_{min}\leftarrow T$\\
-				$k\leftarrow i$\\
-				$min\leftarrow H$\\
+				\tcc{record the min value of entropy and args}
+				$S_{min}\leftarrow S$;\\
+				$T_{min}\leftarrow T$;\\
+				$k\leftarrow i$;\\
+				$min\leftarrow H$;\\
 			}
 	}
-	$Entropy\leftarrow min$\\
-	$E\leftarrow S_{min}$\\
-	$C\leftarrow T_{min}$\\
-	$U\leftarrow (U,d_k)$\\
+	\tcc{renew the min value of entropy and args}
+	$Entropy\leftarrow min$;\\
+	$E\leftarrow S_{min}$;\\
+	$C\leftarrow T_{min}$;\\
+	add $d_k$ to used classifiers set $U$;\\
 }
 
 \end{algorithm}
@@ -90,24 +91,52 @@ $Entropy\leftarrow \sum_{i=1}^{L}\frac{1}{L}\log\frac{1}{L}=L$\\
 
 \begin{algorithm}
 \caption{$Split(E,C,d_i)$}
-$S\leftarrow$ Empty Array\\
-$T\leftarrow$ Empty Array\\
+$S\leftarrow$ Empty Array;\\
+$T\leftarrow$ Empty Array;\\
 \ForEach{$E_i\in E$}{
 	\If {$Pos_i\cap E_i=\phi$ or $Neg_i\cap E_i=\phi$}{
-		$S\leftarrow S+\{E_i\}$\\
-		$T_0\leftarrow (C_i,2)$\\
-		$T\leftarrow (T,(T_0))$\\
+		$S\leftarrow S+\{E_i\}$\tcp*[r]{add $E_i$ to $S$ as an item directly}
+		add a $2$ to the end of code $C_i$, and add the new code item to $T$;\\
 	}
 	\Else{
-		$S\leftarrow S+\{E_i\}\cap Pos_i$\\
-		$T_0\leftarrow (C_i,1)$\\
-		$T\leftarrow (T,(T_0))$\\
-		$S\leftarrow S+\{E_i\}\cap Neg_i$\\
-		$T_0\leftarrow (C_i,0)$\\
-		$T\leftarrow (T,(T_0))$\\
+		
+		$S\leftarrow S+(\{E_i\}\cap Pos_i)$\tcp*[r]{Split $E_i$ into two items, add the two items to $S$ separately}
+		$S\leftarrow S+(\{E_i\}\cap Neg_i)$;\\
+		add an $1$ to the end of code $C_i$, and add the new code item to $T$;\\
+		add a $0$ to the end of code $C_i$, and add the new code item to $T$;\\
+		
 	}
-\Return $S,T$\\
+\Return $S,T$;\\
 }
+
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Heuristic-Search(U,C,E)}
+\If {$|U|=k$}{
+	\If {$|E_i|=1,\forall i\in\{1,2,\cdots,|E|\}$}
+	{
+		End the search and $U$ are the chosen classifiers\tcp*[r]{one code maps to one label}
+	}
+	\Else{
+		\Return to the previous recursion;\\
+	}
+}
+$PriorityQueue\leftarrow empty$\tcp*[r]{the priority queue(big-end) to record the entropy}
+\ForEach {$d_i\in D-U$}{
+	$E',C'\leftarrow Split(E,C,d_i)$\tcp*[r]{if choose $d_i$ as next classifier, renew codes and mapped labels}
+	\ForEach{$j\in\{1,2,\cdots,|C|\}$}{
+		$p_j=p(C_j)=p(r_1,r_2,\cdots,r_{|C_j|})$\tcp*[r]{probability of result $C_j'$}
+	}
+	$H'=\sum_{j=1}^{|E|}p_j(-\sum_{k=1}^{|E_j|}\frac{1}{|E_j|}\log\frac{1}{|E_j|})=\sum_{j=1}^{|E|}p_j\log |E_j|$;\\
+	add $((E',C',k),H')$ to $PriorityQueue$ as $(key,value)$ pair;
+}
+
+\While{$PriorityQueue$ not empty}{
+	$((E',C',k),H')\leftarrow$ top of $PriorityQueue$\tcp*[r]{fetch the element on the top of priority queue}
+	Heuristic-Search($U\cup\{d_k\},C',E'$);
+}
+
 
 \end{algorithm}
 
