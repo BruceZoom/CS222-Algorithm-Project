@@ -122,7 +122,7 @@ $T\leftarrow$ Empty Array;\\
 		\Return to the previous recursion;\\
 	}
 }
-$PriorityQueue\leftarrow empty$\tcp*[r]{the priority queue(big-end) to record the entropy}
+$PriorityQueue\leftarrow empty$\tcp*[r]{the priority queue to record the entropy}
 \ForEach {$d_i\in D-U$}{
 	$E',C'\leftarrow Split(E,C,d_i)$\tcp*[r]{if choose $d_i$ as next classifier, renew codes and mapped labels}
 	\ForEach{$j\in\{1,2,\cdots,|C|\}$}{
