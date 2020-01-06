@@ -380,6 +380,33 @@ However, there are common problems of both work.
 Their framework are task-specific and is difficult to apply their techniques in other domains.
 And their works do not aim to reduce the network complexity during the fusion process.
 
+\newpage
+\begin{itemize}
+	\item $L$ class labels, denoted $\{l_j\}$
+	\item $N$ subclasses in total \begin{itemize}
+		\item $M$ target subclasses, denoted $\mathcal{A} = \{A_i\}$
+		\item $N-M$ dummy subclasses (with irrelevant class labels), denoted $\bar{\mathcal{A}} = \{A_i\}$
+	\end{itemize}
+	\item $g(A_i) := l_j$ the partial map from $A_i$ to class label $l_j$
+	\item $K$ classifiers, denoted $\mathcal{D} = \{d_j\}$
+	\item $f(A_i, d_j) := 0, 1$ the classifier certificate that $A_i$ is classified positive in classifier $d_j$
+	\item $score(d_j)$ the performance of classifier $d_j$
+	\item $k$ the maximum number of classifier to use
+\end{itemize}
+
+\begin{itemize}
+	\item $D \subset \mathcal{D}$ a set of $m$ classifiers \textit{covering} all $M$ target subclasses s.t. $m < k$
+	\item $score(D)$ the overall performance of the classifier set
+\end{itemize}
+
+We define the concept of \textit{covering} as follows.
+\begin{definition}
+	A set of classifiers covers $M$ target subclasses iff. given any sample, the joint classifier can determine whether it \textit{solely} belongs to \begin{enumerate}
+		\item a subset (with consistent labels) of the $M$ target subclasses, or,
+		\item the rest dummy subclasses $\bar{\mathcal{A}}$.
+	\end{enumerate}
+\end{definition}
+
 % embedding
 % As mentioned before, our approach resembles the embedding method, which is a common practice to address the curse of dimensionality, where we map data points into a subspace with reduced dimensionality and carry out the task in this space \cite{2016ml}.
 % This can be accomplished with Multiple Dimension Scaling (MDS) \cite{cox2000multidimensional} or implicitly train an embedding in the hidden layers of a neural network.
