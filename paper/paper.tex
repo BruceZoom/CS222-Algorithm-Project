@@ -203,43 +203,87 @@
 \maketitle
 
 \section{Introduction}
+\label{sec:intro}
 The introduction \dots
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig/formulation_example.png}
+    \caption{An Example Assembly Problem}
+    \label{fig:assemble-example-venn}
+\end{figure}
+
+Figure~\ref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
+The original dataset contains 3 classes $A_1, A_2$, and $A_3$, and we are able to decompose each into some subclasses, e.g., $A_1$ is decomposed into two subclasses of samples $A_{11}$ and $A_{12}$.
+There are 4 binary classifiers, each determines whether a sample belongs to the union of some subclasses marked with boxes, e.g., $d_1$ determines whether a sample belongs to the union of $\{A_{11}, A_{12}, A_{21}, A_{22}\}$.
+We can use classifiers $d_1, d_2, d_3$ and set operations for the classification task:
+\begin{itemize}
+	\item $d_1 - (d_2 + d_3)$ determines samples belong to $A_1$;
+	\item $d_1 \cdot d_2 + d_3$ determines samples belong to $A_2$;
+	\item $d_2 - d_1$ determines samples belong to $A_3$.
+\end{itemize}
+For the partial classification task of class $A_3$, it suffices to use only $d_2$ and $d_4$ and their intersection $d_2 \cdot d_4$ to determine samples in $A_3$.
 
 \subsection{Our Work}
 
-\section{CDRP Model Decomposition and Clustering}
-\subsection{Critical Data Routing Path Model}
-\subsection{CDRP Model Clustering}
+\section{The General Assembly Framework}
+\label{sec:assembly}
+In this section, we give the general framework to assemble multiple classifiers into one that performs complex classification tasks.
+The classification task only need to cover a given set of labels, and we do not need to distinguish the remaining dummy classes.
+We also propose an heuristic search algorithm to find a feasible solution to the assembly problem.
 
-\section{CDRP Model Assembly}
+We only consider the general case of such assembly in this section, while we specialize the assembly problem w.r.t. input composed of CDRP models in \cref{sec:cdrp}.
+The assembly problem can be easily extended to general classifier input, but we only discuss the case for binary classifier input for simplicity.
+
 \subsection{The Assembly Problem}
-For a clear formulation, we define the input of a problem instance to have the following components:
+\label{sec:assemble-problem}
+We first formulate the problem by defining the input of an assembly problem and the output it requires.
+
+The input have the following components:
 \begin{itemize}
 	\item $L$ class labels, denoted $\{l_j\}$
 	\item $N$ subclasses in total \begin{itemize}
 		\item $M$ target subclasses, denoted $\mathcal{A} = \{A_i\}$
-		\item $N-M$ dummy subclasses (with irrelevant class labels), denoted $\bar{\mathcal{A}} = \{A_i\}$
+		\item $N-M$ dummy subclasses, denoted $\bar{\mathcal{A}} = \{A_i\}$
 	\end{itemize}
 	\item $g(A_i) := l_j$ the partial map from $A_i$ to class label $l_j$
 	\item $K$ classifiers, denoted $\mathcal{D} = \{d_j\}$
-	\item $f(A_i, d_j) := 0, 1$ the classifier certificate that $A_i$ is classified positive in classifier $d_j$
-	\item $score(d_j)$ the accuracy(?) of classifier $d_j$
+	\item $f(A_i, d_j) := 0, 1$ the classifier certificate function that $A_i$ is classified positive in classifier $d_j$
+	\item $score(d_j)$ the performance score of classifier $d_j$
 	\item $k$ the maximum number of classifier to use
 \end{itemize}
 
-The solution to the instance should contain:
+The original dataset consists of $L$ classes with different labels.
+Some prior knowledge allows us to decompose the dataset into $N$ subclasses of samples.
+A subclass is the unit sample group we will consider in the assembly problem, and for a subclass to be \textit{consistent}, we assume all samples in a subclass have the sample label given by the partial map $g$.
+Since we are only interested in a subset of labels, we group all $M$ target subclasses having these labels into $\mathcal{A}$
+The rest $N-M$ subclasses are dummy ones.
+
+We are given $K$ binary classifiers with domains of the entire dataset.
+All samples in a subclass $A_i$ should be assigned the same 0-1 label by a classifier $d_j$, which is determined by the certificate function $f$.
+To extend the assembly problem to general classifier inputs, we only need to change the certificate function $f$ for classifiers to allow return values from a set of multiple symbols.
+The cardinality of $f$'s range should be $n$ for an $n$-classifier assembly problem.
+For example, a ternary classifier assembly problem needs the certificate function to produce three possible symbols, i.e., $|range(f)| = 3$.
+
+For each classifier, we also know its performance score, which could be its accuracy, its model complexity, or both.
+There is a constraint for a problem instance that we can only use up to $k$ classifiers to assemble the final classifier.
+
+The solution to the problem instance should contain:
 \begin{itemize}
-	\item $D \subset \mathcal{D}$ a set of $m$ classifiers \textit{covering} all $M$ target subclasses s.t. $m < k$
-	\item $score(D)$ the overall accuracy(?) of the classifier set
+	\item $D \subset \mathcal{D}$ a set of $m$ classifiers \textit{distinguishing} all $M$ target subclasses s.t. $m < k$
+	\item $score(D)$ the overall performance of the classifier set
 \end{itemize}
 
-We define the concept of \textit{covering} as follows.
+\todo{The overal performance score.}
+
+We define the concept of \textit{distinguishing} as follows.
 \begin{definition}
 	A set of classifiers covers $M$ target subclasses iff. given any sample, the joint classifier can determine whether it \textit{solely} belongs to \begin{enumerate}
 		\item a subset (with consistent labels) of the $M$ target subclasses, or,
 		\item the rest dummy subclasses $\bar{\mathcal{A}}$.
 	\end{enumerate}
 \end{definition}
+In other word, the classifier should uniquely determine whether a sample have which of the target labels or the dummy label.
 
 We start with analyzing the intractability of the problem.
 \begin{theorem}
@@ -294,6 +338,14 @@ By definition, the problem is an NP problem.
 \end{proof}
 
 \subsection{The Algorithm}
+\label{sec:assembly-algorithm}
+
+
+\section{Model Assembly based on CDRP Decomposition and Clustering}
+\label{sec:cdrp}
+\subsection{Critical Data Routing Path Model}
+\subsection{CDRP Model Clustering}
+\subsection{CDRP Model Assembly}
 
 \section{Experiments}
 \subsection{CDRP Models of VGGNet and ? trained on CIFAR-100}
