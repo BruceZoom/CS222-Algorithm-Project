@@ -79,6 +79,7 @@
 
 
 \usepackage{multicol}
+\usepackage{multirow}
 \usepackage{lipsum}
 \usepackage{mathtools}
 \usepackage{cuted}
@@ -327,7 +328,7 @@ We then show the algorithm returns $yes$ iff. $D$ is a certificate to the proble
 	\item[$\Leftarrow$:]
 	Assume the algorithm returns $no$, then
 	\begin{enumerate}
-		\item Two subclasses with different labels share the same encoding, i.e., the classifier set cannot determine which label to assign for both subclasses, which violates the first condition of the "covering";
+		\item Two subclasses with different labels share the same encoding, i.e., the classifier set cannot determine which label to assign for both subclasses, which violates the first condition of the \textit{distinguishing};
 		\item Some target subclass (with meaningful label) share the same encoding with some dummy subclasses.
 		The classifier set cannot determine whether samples of the target subclass belong to the dummy class or not, which violates the second condition.
 	\end{enumerate}
@@ -337,9 +338,65 @@ As a result, the problem instance $k$ is solvable iff. there exists a $D$ with s
 By definition, the problem is an NP problem.
 \end{proof}
 
-\subsection{The Algorithm}
-\label{sec:assembly-algorithm}
+The table in Figure~\ref{fig:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm.
+If we only use the encoding from $d_1, d_2, d_3$, we find no two subclasses with different labels share the same encoding, and therefore certify the correctness of the feasible solution proposed before.
+For the partial classification task for $A_3$, using two bits from $d_2, d_4$ already provides distinguishable encoding for $A_{31}$ and the remaining dummy classes.
 
+% \linespread{1.1}
+\begin{figure}[h]
+	\begin{tabular}{|c|c|cccc|}
+	\cline{1-6}
+	\multicolumn{2}{|c|}{} & $d_1$ & $d_2$ & $d_3$ & $d_4$ \\ \cline{1-6}
+	\multirow{2}{*}{$A_1$} & $A_{11}$ & 1 & 0 & 0 & 0 \\ \cline{2-6}
+	 & $A_{12}$ & 1 & 0 & 0 & 0 \\ \cline{1-6}
+	\multirow{3}{*}{$A_2$} & $A_{21}$ & 1 & 1 & 0 & 0 \\ \cline{2-6}
+	 & $A_{22}$ & 1 & 0 & 1 & 1 \\ \cline{2-6}
+	 & $A_{23}$ & 0 & 0 & 1 & 0 \\ \cline{1-6}
+	$A_3$ & $A_{31}$ & 0 & 1 & 0 & 1 \\ \cline{1-6}
+	\end{tabular}
+	\caption{Encoding for the Intro Example}
+	\label{fig:assemble-example-encoding}
+\end{figure}
+% \linespread{1.0}
+
+\subsection{The Heuristic Search Algorithm}
+\label{sec:assembly-algorithm}
+Based on the encoding method, we propose a search algorithm based on greedy heuristics in Table~\ref{tab:heuristic-search} for finding a feasible solution to the problem instance with constraint $k$.
+
+\begin{algorithm}
+	\caption{The General Algorithm}
+	\label{tab:heuristic-search}
+	\begin{algorithmic}[1]
+		\Require The inputs to the assembly problem;
+		\Ensure $D$, a classifier set satisfying constraints, or $\emptyset$ if not feasible.
+		\State $Q \gets \emptyset$; \Comment A priority queue, the last element $h$ is the key
+		\Function{Expand}{$D$} \Comment $D$, the classifier set
+			\For{$d \in \mathcal{D} - D$}
+				\State Calculate the encoding $C$ using $D \cup \{d\}$;
+				\State Calculate the entropy $h$ for $C$;
+				\State $Q \gets Q \cup \{(D \cup \{d\}, C, h)\}$;
+			\EndFor
+		\EndFunction
+		\Function{HeuristicSearch}{}
+			\State $\Call{Expand}{\emptyset}$;
+			\While{$Q \neq \emptyset$}
+				\State $(D, C, h) \gets Pop(Q)$;
+				\If{$e_0 == 0$}
+					\State \Return $D$;
+				\EndIf
+				\If{|D| < k}
+					\State $\Call{Expand}{D}$;
+				\EndIf
+			\EndWhile
+			\State \Return $\emptyset$;
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+The search is guided by the residual entropy of target subclasses and dummy subclasses.
+\begin{equation}
+	H(C) = \sum_{c \in C} p(c)H(c) = \sum_{c \in C} p(c)\sum_{l \in \mathcal{L}'} p(c, l)\log\frac{1}{p(c, l)}
+\end{equation}
 
 \section{Model Assembly based on CDRP Decomposition and Clustering}
 \label{sec:cdrp}
