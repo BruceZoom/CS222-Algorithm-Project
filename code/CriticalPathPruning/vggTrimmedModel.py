@@ -18,25 +18,33 @@ class TrimmedModel():
         2. Assign new weights to layers 
         3. Test Accuracy
     '''
-    def __init__(self,target_class_id=[0], multiPruning=False):
-        self.prune_ratio = 0.9
+    def __init__(self,target_class_id=[0],target_cluster_id=[0], mode = 'cluster',multiPruning=False):
+        self.prune_ratio = 0
 
         self.graph = tf.Graph()
         self.build_model(self.graph)
         print("restored the pretrained model......")
         self.restore_model(self.graph)
-        
-        self.target_class_id = target_class_id # assign the trim class id 
+        self.mode = mode
+        if self.mode=="cluster":
+            self.target_id = target_cluster_id
+        else:
+            self.target_id = target_class_id
+        self.target_cluster_id = target_cluster_id
+        self.target_class_id = target_class_id # assign the trim class id
         self.multiPruning = multiPruning # ready to prune for one single class or multi classes
         # self.close_sess()
     
     '''
     Find mask class unit
     '''
-    def mask_class_unit(self, classid):
+    def mask_unit(self, classid):
         self.test_counter = 0
         theshold = 10
-        json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        if self.mode == "class":
+            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        else:
+            json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
         with open(json_path, "r") as f:
             gatesValueDict = json.load(f)
             for idx in range(len(gatesValueDict)):
@@ -56,13 +64,16 @@ class TrimmedModel():
 
             return gatesValueDict
 
+
     '''
     mask by value
     '''
     def mask_unit_by_value(self, classid):
         formulizedDict = {}
-        json_path = "./ClassEncoding/class" + str(classid) + ".json"
-        
+        if self.mode=="class":
+            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        else:
+            json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
         allGatesValue = []
 
         with open(json_path, "r") as f:
@@ -74,7 +85,7 @@ class TrimmedModel():
                 allGatesValue += vec
                 
         allGatesValue.sort()
-        allGatesValue = allGatesValue[:int(len(allGatesValue)*0.8)]
+        allGatesValue = allGatesValue[:int(len(allGatesValue)*self.prune_ratio)]
         
         allGatesValue = set(allGatesValue)
         with open(json_path, "r") as f:
@@ -104,9 +115,10 @@ class TrimmedModel():
         theshold = 5
         self.test_counter = 0
         ''' init the dict with class0.json '''
-        multiClassGates = self.mask_class_unit(self.target_class_id[0])
-        for classid in self.target_class_id:
-            if (classid == self.target_class_id[0]):
+
+        multiClassGates = self.mask_unit(self.target_id[0])
+        for classid in self.target_id:
+            if (classid == self.target_id[0]):
                 continue
             ''' Merge JSONs continuously '''
             json_path = "./ClassEncoding/class" + str(classid) + ".json"
@@ -151,17 +163,23 @@ class TrimmedModel():
         print("RUNNING mask_class_multi_by_value.py")
         # print("Pruning Ratio: ", self.prune_ratio)
         multiClassGates = list()
-        for classid in self.target_class_id:
+        for classid in self.target_id:
             '''
             Merge JSONs continuously
             '''
-            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+            if self.mode=="class":
+                json_path = "./ClassEncoding/class" + str(classid) + ".json"
+            else:
+                json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
             with open(json_path, "r") as f:
                 gatesValueDict = json.load(f)
                 for idx in range(len(gatesValueDict)):
                     layer = gatesValueDict[idx]
                     name = layer["name"]
                     vec = layer["shape"]
+
+                    # vec = list(vec/np.mean(vec))
+
                     # process name
                     name = name.split('/')[0]
                     gatesValueDict[idx]["name"] = name
@@ -191,7 +209,8 @@ class TrimmedModel():
             layer = multiClassGates[idx]
             name = layer["name"]
             vec = layer["shape"]
-            allGatesValue += vec
+            # if name[0]=="C":
+            #     allGatesValue += vec
                 
         allGatesValue.sort()
         allGatesValue = allGatesValue[:int(len(allGatesValue)*self.prune_ratio)]
@@ -202,7 +221,7 @@ class TrimmedModel():
         for idx in range(len(result)):
             layer = result[idx]
             name = layer["name"]
-            vec = layer["shape"]        
+            vec = layer["shape"]
             # process name
             name = name.split('/')[0]
             # process vec
@@ -221,14 +240,14 @@ class TrimmedModel():
     '''
     def assign_weight(self):
         '''
-        Encapsulate unit-class pruning and multi-class pruning print("PRUNE FOR CLASS", self.target_class_id)
+        Encapsulate unit-class pruning and multi-class pruning print("PRUNE FOR CLASS", self.target_id)
         '''
         print("assign weights......")
         maskDict = []
-        if (self.multiPruning == True and len(self.target_class_id) > 1):
+        if (self.multiPruning == True and len(self.target_id) > 1):
             maskDict = self.mask_class_multi_by_value()
         else:
-            maskDict = self.mask_unit_by_value(self.target_class_id[0])
+            maskDict = self.mask_unit_by_value(self.target_id[0])
 
         for tmpLayer in maskDict:
             if (tmpLayer["name"][0] == "C"): # if the layer is convolutional layer
@@ -240,6 +259,7 @@ class TrimmedModel():
                             tmpWeights = self.sess.run(var)
                             tmpMask = np.array(tmpLayer["shape"])
 
+                            # tmpWeights[:,:,:,] = tmpWeights[:,:,:,] * tmpMask
                             tmpWeights[:,:,:, tmpMask == 0] = 0
                             assign = tf.assign(var, tmpWeights)
                             self.sess.run(assign)
@@ -255,6 +275,7 @@ class TrimmedModel():
                             tmpWeights = self.sess.run(var)
                             tmpMask = np.array(tmpLayer["shape"])
 
+                            # tmpWeights[:,] = tmpWeights[:,] * tmpMask
                             tmpWeights[:, tmpMask == 0] = 0
                             assign = tf.assign(var, tmpWeights)
                             self.sess.run(assign)
@@ -263,6 +284,8 @@ class TrimmedModel():
                         if var.name == name_bias:
                             tmpBias = self.sess.run(var)
                             tmpMask = np.array(tmpLayer["shape"])
+
+                            # tmpBias = tmpBias * tmpMask
 
                             tmpBias[tmpMask == 0] = 0
                             assign = tf.assign(var, tmpBias)
@@ -297,8 +320,8 @@ class TrimmedModel():
 
     def test_accuracy(self, test_images, test_labels):
         start = time.time()
-        ys_pred_argmax, ys_true_argmax = self.sess.run(
-            [self.ys_pred_argmax, self.ys_true_argmax], feed_dict={
+        ys_pred_argmax, ys_true_argmax,ys_pred = self.sess.run(
+            [self.ys_pred_argmax, self.ys_true_argmax,self.ys_pred], feed_dict={
             self.xs: test_images,
             self.ys_true: test_labels, 
             self.lr : 0.1,
@@ -309,6 +332,13 @@ class TrimmedModel():
         print("Trimmed Model Test Time: " + str(end - start))
 
         count = 0
+        print(ys_pred_argmax)
+        print(ys_true_argmax)
+
+        print(np.mean(ys_pred,axis=0))
+        tmp = np.exp(ys_pred)
+        print(tmp[:, -1] / tmp.sum(axis=1))
+
         for i in range(len(ys_pred_argmax)):
             if ys_true_argmax[i] in self.target_class_id:
                 count += 1 if ys_pred_argmax[i] == ys_true_argmax[i] else 0
@@ -371,6 +401,7 @@ class TrimmedModel():
                 bfc = self.bias_variable([ label_count ])
                 ys_pred = tf.matmul(current, Wfc) + bfc
 
+
             '''
             Loss Function
             '''
@@ -388,6 +419,7 @@ class TrimmedModel():
             '''
             Accuracy & Top-5 Accuracy
             '''
+            self.ys_pred = ys_pred
             self.ys_pred_argmax = tf.argmax(ys_pred, 1)
             self.ys_true_argmax = tf.argmax(self.ys_true, 1)
             correct_prediction = tf.equal(tf.argmax(ys_pred, 1), tf.argmax(self.ys_true, 1))

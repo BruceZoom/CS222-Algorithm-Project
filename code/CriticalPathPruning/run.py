@@ -4,6 +4,9 @@ import json
 from CIFAR_DataLoader import CifarDataManager, display_cifar
 from vggNet import Model, NameMapping
 import argparse
+import warnings
+warnings.filterwarnings("ignore")
+
 
 '''
 Configuration:
@@ -156,6 +159,12 @@ if __name__ == '__main__':
     parser.add_argument(
         "--verbose", help="Print messages.",
         default=True, type=bool_string)
+    parser.add_argument(
+        "--save_folder", help="folder to save results",
+        default=None, type=str)
+    parser.add_argument(
+        "--mode", help="'train' or 'test' data",
+        default="train", type=str)
 
     args = parser.parse_args()
     assert args.dataset in ['imagenet', 'cifar'], "--dataset can only be 'imagenet' or 'cifar'."
@@ -171,13 +180,16 @@ if __name__ == '__main__':
     for i in range(args.begin_class, args.end_class+1):
         print("Current class: {}".format(i))
         print("Gnerating data...")
-        train_images, train_labels = d.train.generateSpecializedData(class_id=i, count=args.max_samples)
+        if args.mode == "train":
+            train_images, train_labels = d.train.generateSpecializedData(class_id=i, count=args.max_samples)
+        else:
+            train_images, train_labels = d.test.generateSpecializedData(class_id=i, count=args.max_samples)
         print("Encoding data...")
         if args.dataset == 'cifar':
-            model.encode_class_data(i, train_images)
+            model.encode_class_data(i, train_images,save_folder = args.save_folder)
         elif args.dataset == 'imagenet':
             model.encode_class_data(i, train_images, "vgg-imagenet/vgg16-imagenet.ckpt", NameMapping.imagenet_mapping_,
                                     use_batch_norm=False, with_bias=True, vgg_type='D', output_size=1000,
-                                    dataset_name='imagenet', verbose=args.verbose)
+                                    dataset_name='imagenet', verbose=args.verbose, save_folder = args.save_folder)
         print("Encoding class...")
-        calculate_total_by_weights(i, size=args.max_samples, dataset=args.dataset)
+        #calculate_total_by_weights(i, size=args.max_samples, dataset=args.dataset)

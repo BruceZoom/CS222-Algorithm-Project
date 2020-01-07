@@ -9,7 +9,7 @@ from sklearn.utils import shuffle
 import os
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 
 class NameMapping:
@@ -114,7 +114,7 @@ class Model():
 
     def encode_class_data(self, class_id, train_images, checkpoint_path="vggNet/augmentation.ckpt-120",
                           name_mapping=None, use_batch_norm=True, with_bias=False, vgg_type='C', output_size=100,
-                          dataset_name='cifar', verbose=True):
+                          dataset_name='cifar', verbose=True,save_folder = None):
         self.use_batch_norm = use_batch_norm
         self.with_bias = with_bias
         self.vgg_type = vgg_type
@@ -128,7 +128,15 @@ class Model():
             generatedGate = self.compute_encoding(train_images[i].reshape((1, 32, 32, 3)),
                                                   checkpoint_path, name_mapping, output_size)
             picname = "class" + str(class_id) + "-pic" + str(i)
-            jsonpath = "./ImageEncoding/" + picname + ".json"
+            if save_folder == None:
+                if dataset_name == 'imagenet':
+                    save_folder = "imagenet-ImageEncoding"
+                else:
+                    save_folder = "ImageEncoding"
+            if dataset_name == 'imagenet':
+                jsonpath = "./"+save_folder+"/" + picname + ".json"
+            else:
+                jsonpath = "./"+save_folder+"/" + picname + ".json"
             with open(jsonpath, 'w') as f:
                 json.dump(generatedGate, f, sort_keys=True, indent=4, separators=(',', ':'))
 
@@ -298,7 +306,7 @@ class Model():
         })
 
         tmpLoss = 1000
-        for epoch in range(100):
+        for epoch in range(150):
             if epoch == 50:
                 learning_rate /= 10
                 # L1_loss_penalty *= 10
@@ -312,7 +320,7 @@ class Model():
                 self.penalty: L1_loss_penalty
             })
 
-            [cross_entropy, L1_loss, accuracy] = self.sess.run([self.cross_entropy, self.l1_loss, self.accuracy],
+            [cross_entropy, L1_loss, accuracy, ys_orig] = self.sess.run([self.cross_entropy, self.l1_loss, self.accuracy,self.ys_orig],
                                                                feed_dict={
                                                                    self.xs: input_data,
                                                                    self.ys_orig: label_orig,
@@ -321,6 +329,7 @@ class Model():
                                                                    self.is_training: False,
                                                                    self.penalty: L1_loss_penalty
                                                                })
+            print(np.argmax(ys_orig),ys_orig.shape)
 
             if self.verbose:
                 print("Epoch: {}: Cross_Entropy: {}, L1_loss: {}, Accuracy: {}".format(
@@ -376,9 +385,9 @@ class Model():
                 continue
 
             ## Original version: only accept those that are still correct
-            if accuracy > 0.99 and L1_loss != 'nan' and L1_loss < 1000:
+            # if accuracy > 0.99 and L1_loss != 'nan' and L1_loss < 1000:
             ## In another network without correct labels
-            # if L1_loss != 'nan' and L1_loss < 1000:
+            if L1_loss != 'nan' and L1_loss < 1000:
                 if self.verbose:
                     print("Assign gate")
                 generateGate = newGate

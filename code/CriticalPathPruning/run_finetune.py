@@ -1,6 +1,7 @@
 from vggFinetuneModel import FineTuneModel
 from CIFAR_DataLoader import CifarDataManager
 import numpy as np
+import argparse
 
 '''
 For fine tune model, the data label should be different:
@@ -24,18 +25,47 @@ def modify_label(labels, test_classes = [0]):
             tmp_labels.append(len(test_classes))
     return one_hot(tmp_labels, vals=len(test_classes)+1)
 
+
+parser = argparse.ArgumentParser("run finetune")
+parser.add_argument(
+    "--mode", help="run finetune for 'class' or 'cluster' CDRP classifier",
+    type=str)
+args = parser.parse_args()
+
+mode = args.mode
+assert mode in ["class","cluster"]
+
 data_loader = CifarDataManager()
 
-test_images, test_labels = data_loader.test.next_batch_without_onehot(500)
+class_ids = [0]
+cluster_ids = [137]
 
-test_labels = modify_label(test_labels, test_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+# test_images, test_labels = data_loader.test.next_batch_balance_without_onehot(200,class_ids)
 
-model = FineTuneModel(target_class_id=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+if mode == "class":
+    target_ids = class_ids
+else:
+    target_ids = cluster_ids
+if mode == "class":
+    test_images, test_labels = data_loader.test.next_batch_balance_without_onehot(200, class_ids, mode=mode)
+else:
+    test_images, test_labels = data_loader.test.next_batch_balance_without_onehot(200,class_ids,mode = mode,type="test")
+test_labels = modify_label(test_labels, test_classes = target_ids)
+
+model = FineTuneModel(target_class_id=class_ids,target_cluster_id = cluster_ids, mode = mode)
 model.assign_weight()
 model.test_accuracy(test_images, test_labels)
 
-for i in range(10):
-    train_images, train_labels = data_loader.train.next_batch_without_onehot(200)
-    train_labels = modify_label(train_labels, test_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+for i in range(1000):
+    print(i)
+    train_images, train_labels = data_loader.train.next_batch_balance_without_onehot(200,class_ids,mode = mode)
+    # train_images, train_labels = data_loader.train.next_batch_without_onehot(100)
+
+    train_labels = modify_label(train_labels, test_classes = target_ids)
+
     model.train_model(train_images, train_labels)
+
+    # test_images, test_labels = data_loader.test.next_batch_balance_without_onehot(100, class_ids)
+    # test_labels = modify_label(test_labels, test_classes=class_ids)
+
     model.test_accuracy(test_images, test_labels)

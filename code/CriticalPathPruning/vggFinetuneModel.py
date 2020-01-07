@@ -14,11 +14,11 @@ class FineTuneModel():
         1. Last FC layer neurons number would be the target class number + 1
         2. Need to transform the original label to targeted class label
     '''
-    def __init__(self, target_class_id=[0]):
+    def __init__(self, target_class_id=[0], target_cluster_id = [0], mode = "class"):
         '''
         Set hyperparameters
         '''
-        self.learning_rate = 0.01
+        self.learning_rate = 0.1
         self.epoch = 0
         self.prune_ratio = 0.9
 
@@ -30,8 +30,15 @@ class FineTuneModel():
         self.AllGateVariables = dict()
         self.AllGateVariableValues = list()
 
-        self.target_class_id = target_class_id # assign the trim class id 
-        self.target_number = len(target_class_id) + 1
+        self.mode = mode
+        if mode == "class":
+            self.target_id = target_class_id
+            self.target_number = len(target_class_id) + 1
+        else:
+            self.target_id = target_cluster_id
+            self.target_number = len(target_cluster_id) + 1
+
+        self.target_class_id = target_class_id # assign the trim class id
 
         self.graph = tf.Graph()
         self.build_model(self.graph)
@@ -42,32 +49,57 @@ class FineTuneModel():
     Test Accuracy
     '''
     def test_accuracy(self, test_images, test_labels):
-        accuracy = self.sess.run(
-            self.accuracy, feed_dict={
+
+        accuracy,ys_pred_argmax = self.sess.run(
+            [self.accuracy,self.ys_pred_argmax], feed_dict={
             self.xs: test_images,
             self.ys_orig: test_labels, 
             self.lr : 0.1,
             self.is_training: False,
-            self.keep_prob: 1.0
+            self.keep_prob: 1.0,
         }) 
 
-        print("Test Accuracy:" + str(accuracy))
+        new_test_labels = []
+        for item in test_labels:
+            if item[0]>item[1]:
+                new_test_labels.append(0)
+            else:
+                new_test_labels.append(1)
+        new_test_labels = np.array(new_test_labels)
 
+        p = new_test_labels==0
+        n = new_test_labels==1
+
+        p_label = new_test_labels[p]
+        p_pred = ys_pred_argmax[p]
+        n_label = new_test_labels[n]
+        n_pred = ys_pred_argmax[n]
+
+        tp = sum(p_label == p_pred)
+        fp = sum(p) - tp
+        tn = sum(n_label == n_pred)
+        fn = sum(n) - tn
+
+        print("Test Accuracy:" + str(accuracy))
+        print("TP: %f, FP: %f, TN: %f, FN: %f"%(tp/(tp+fp),fp/(tp+fp),tn/(tn+fn),fn/(tn+fn)))
+        # print("test:",ys_pred_argmax)
     '''
     Fine tune training
     '''
     def train_model(self, input_images, input_labels):
-        if self.epoch == 5: self.learning_rate /= 10
-        if self.epoch == 50: self.learning_rate /= 10
-        if self.epoch == 100: self.learning_rate /= 10
-        self.sess.run(self.train_step, feed_dict = {
+        # if self.epoch == 5: self.learning_rate /= 10
+        if self.epoch == 400: self.learning_rate /= 10
+        if self.epoch == 800: self.learning_rate /= 10
+        _, loss,ys_pred_argmax  = self.sess.run([self.train_step, self.loss, self.ys_pred_argmax], feed_dict = {
                 self.xs: input_images,
                 self.ys_orig : input_labels, 
                 self.lr : self.learning_rate, 
                 self.keep_prob : 1.0, 
-                self.is_training : False
+                self.is_training : True
             })
         self.epoch += 1
+        # print("train:", ys_pred_argmax)
+        print("Loss: ",np.array(loss))
 
     '''
     Restore the original network weights
@@ -111,7 +143,10 @@ class FineTuneModel():
     def mask_class_unit(self, classid):
         self.test_counter = 0
         theshold = 10
-        json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        if self.mode == "class":
+            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        else:
+            json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
         with open(json_path, "r") as f:
             gatesValueDict = json.load(f)
             for idx in range(len(gatesValueDict)):
@@ -135,7 +170,11 @@ class FineTuneModel():
     '''
     def mask_unit_by_value(self, classid):
         formulizedDict = {}
-        json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        if self.mode == "class":
+            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+        else:
+            json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+
         
         allGatesValue = []
 
@@ -148,7 +187,7 @@ class FineTuneModel():
                 allGatesValue += vec
                 
         allGatesValue.sort()
-        allGatesValue = allGatesValue[:int(len(allGatesValue)*0.8)]
+        allGatesValue = allGatesValue[:int(len(allGatesValue)*self.prune_ratio)]
         
         allGatesValue = set(allGatesValue)
         with open(json_path, "r") as f:
@@ -178,12 +217,17 @@ class FineTuneModel():
         theshold = 5
         self.test_counter = 0
         ''' init the dict with class0.json '''
-        multiClassGates = self.mask_class_unit(self.target_class_id[0])
-        for classid in self.target_class_id:
-            if (classid == self.target_class_id[0]):
+        multiClassGates = self.mask_class_unit(self.target_id[0])
+        for classid in self.target_id:
+            if (classid == self.target_id[0]):
                 continue
             ''' Merge JSONs continuously '''
-            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+
+            if self.mode == "class":
+                json_path = "./ClassEncoding/class" + str(classid) + ".json"
+            else:
+                json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+
             with open(json_path, "r") as f:
                 gatesValueDict = json.load(f)
                 for idx in range(len(gatesValueDict)):
@@ -225,11 +269,15 @@ class FineTuneModel():
         print("RUNNING mask_class_multi_by_value.py")
         # print("Pruning Ratio: ", self.prune_ratio)
         multiClassGates = list()
-        for classid in self.target_class_id:
+        for classid in self.target_id:
             '''
             Merge JSONs continuously
             '''
-            json_path = "./ClassEncoding/class" + str(classid) + ".json"
+            if self.mode == "class":
+                json_path = "./ClassEncoding/class" + str(classid) + ".json"
+            else:
+                json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+
             with open(json_path, "r") as f:
                 gatesValueDict = json.load(f)
                 for idx in range(len(gatesValueDict)):
@@ -299,10 +347,10 @@ class FineTuneModel():
         '''
         print("assign weights......")
         maskDict = []
-        if (len(self.target_class_id) > 1):
+        if (len(self.target_id) > 1):
             maskDict = self.mask_class_multi_by_value()
         else:
-            maskDict = self.mask_unit_by_value(self.target_class_id[0])
+            maskDict = self.mask_unit_by_value(self.target_id[0])
 
         for tmpLayer in maskDict:
             if (tmpLayer["name"][0] == "C"): # if the layer is convolutional layer
@@ -314,9 +362,9 @@ class FineTuneModel():
                             tmpWeights = np.array(tmpLayer["shape"])
                             assign = tf.assign(var, tmpWeights)
 
-                            for i in range(len(tmpWeights)):
-                                if tmpWeights[i]<0.001:
-                                    assign[i] = tf.stop_gradient(assign[i])
+                            # for i in range(len(tmpWeights)):
+                            #     if tmpWeights[i]<0.001:
+                            #         assign[i].assign(tf.stop_gradient(assign[i]))
 
                             self.sess.run(assign)
     
@@ -347,7 +395,8 @@ class FineTuneModel():
             self.lr = tf.placeholder("float", shape=[])
             self.keep_prob = tf.placeholder(tf.float32)
             self.is_training = tf.placeholder("bool", shape=[])
-            weight_decay = 5e-4
+            # weight_decay = 5e-4
+            weight_decay = 0
 
             '''
             VGG Network Model Construction with Control Gates 
@@ -402,6 +451,7 @@ class FineTuneModel():
             ))
             l2_loss = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
             total_loss = l2_loss * weight_decay + cross_entropy
+            self.loss = total_loss
             
             '''
             Optimizer
@@ -413,7 +463,7 @@ class FineTuneModel():
             '''
             correct_prediction = tf.equal(tf.argmax(self.ys_orig, 1), tf.argmax(self.ys_pred, 1))
             self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-
+            self.ys_pred_argmax = tf.argmax(self.ys_pred, 1)
             self.init = tf.global_variables_initializer()
 
     '''
@@ -455,7 +505,7 @@ class FineTuneModel():
     def batch_activ_conv(self, current, in_features, out_features, kernel_size, is_training, keep_prob):
         with tf.variable_scope("composite_function", reuse = tf.AUTO_REUSE):
             current = self.conv2d(current, in_features, out_features, kernel_size)
-            current = tf.contrib.layers.batch_norm(current, scale=True, is_training=is_training, updates_collections=None, trainable=False)
+            current = tf.contrib.layers.batch_norm(current, scale=True, is_training=is_training, updates_collections=None, trainable=True)
             # convValues.append(current)
             current = tf.nn.relu(current)
             #current = tf.nn.dropout(current, keep_prob)
@@ -467,7 +517,7 @@ class FineTuneModel():
         current = tf.matmul(current, Wfc) + bfc
         # gate = self.gate_variable(out_features)
         # current = tf.multiply(current, tf.abs(gate))
-        current = tf.contrib.layers.batch_norm(current, scale=True, is_training=is_training, updates_collections=None, trainable=False)
+        current = tf.contrib.layers.batch_norm(current, scale=True, is_training=is_training, updates_collections=None, trainable=True)
         current = tf.nn.relu(current)
         return current
 

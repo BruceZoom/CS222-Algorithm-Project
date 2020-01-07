@@ -4,7 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import keras
+import random
 import _pickle as cPickle
+import pickle
 
 # =============== Define Data Loader ===============
 ''' Utility Functions '''
@@ -28,8 +30,20 @@ class CifarLoader(object):
 
         self.images = None
         self.labels = None
+        self.class_image = None
+        self.class_label = None
 
     def load(self):
+        with open("../data/clusters.pkl","rb") as file:
+            self.cluster = pickle.load(file,encoding="bytes")
+        with open("../data/class_clusters.pkl","rb") as file:
+            self.class_cluster = pickle.load(file,encoding="bytes")
+
+        with open("../data/clusters_test.pkl","rb") as file:
+            self.cluster_test = pickle.load(file,encoding="bytes")
+        with open("../data/class_clusters_test.pkl","rb") as file:
+            self.class_cluster_test = pickle.load(file,encoding="bytes")
+
         data = [unpickle(f) for f in self._source]
         images = np.vstack(d["data"] for d in data)
 
@@ -38,13 +52,94 @@ class CifarLoader(object):
         # self.labels = one_hot(np.hstack([d["fine_labels"] for d in data]), 100)
         self.labels = np.hstack([d["fine_labels"] for d in data])
         self.images = self.normalize_images(self.images)
+
+        self.class_image = []
+        self.class_label = []
+        for id in range(100):
+            self.class_label.append(list(self.labels[self.labels==id]))
+            self.class_image.append(list(self.images[self.labels == id]))
+
+        # self.class_label = np.array(self.class_label)
+        # self.class_image = np.array(self.class_image)
         return self
 
     def next_batch(self, batch_size):
         x, y = self.images[self._i:self._i+batch_size], self.labels[self._i:self._i+batch_size]
         self._i = (self._i + batch_size) % len(self.images)
-        return x, one_hot(y, 100) 
-    
+        return x, one_hot(y, 100)
+
+    def next_batch_balance(self,batch_size,target_class_id,mode = "class", type = "train"):
+        num = batch_size // (len(target_class_id)+1)
+        tmp = []
+        if type == "train":
+            class_cluster = self.class_cluster
+        else:
+            class_cluster = self.class_cluster_test
+        for class_id in target_class_id:
+            # class_image = random.sample(self.class_image[class_id],num)
+            # class_label = random.sample(self.class_label[class_id],num)
+            for _ in range(num):
+                i = random.randint(0,len(self.class_image[class_id])-1)
+                tmp.append((self.class_image[class_id][i],self.class_label[class_id][i],class_cluster[class_id][i]))
+
+        other_num = batch_size - num * len(target_class_id)
+        other_id = list(set(range(100))-set(target_class_id))
+        for j in range(other_num):
+            id = random.choice(other_id)
+            i = random.randint(0,len(self.class_image[id])-1)
+            # image = random.choice(self.class_image[id])
+            tmp.append((self.class_image[id][i],id,class_cluster[id][i]))
+        random.shuffle(tmp)
+        x = []
+        y = []
+        z = []
+        for i in range(batch_size):
+            x.append(tmp[i][0])
+            if mode == "class":
+                y.append(tmp[i][1])
+                hot_num = 100
+            else:
+                y.append(tmp[i][2])
+                hot_num = 200
+        x = np.array(x)
+        y = np.array(y)
+        return x, one_hot(y,hot_num)
+
+    def next_batch_balance_without_onehot(self,batch_size,target_class_id,mode="class",type = "train"):
+        num = batch_size // (len(target_class_id)+1)
+        tmp = []
+        if type == "train":
+            class_cluster = self.class_cluster
+        else:
+            class_cluster = self.class_cluster_test
+        for class_id in target_class_id:
+            # class_image = random.sample(self.class_image[class_id],num)
+            # class_label = random.sample(self.class_label[class_id],num)
+            for _ in range(num):
+                i = random.randint(0,len(self.class_image[class_id])-1)
+                tmp.append((self.class_image[class_id][i],self.class_label[class_id][i],class_cluster[class_id][i]))
+
+        other_num = batch_size - num * len(target_class_id)
+        other_id = list(set(range(100))-set(target_class_id))
+        for j in range(other_num):
+            id = random.choice(other_id)
+
+            i = random.randint(0,len(self.class_image[id])-1)
+            # image = random.choice(self.class_image[id])
+            tmp.append((self.class_image[id][i],id,class_cluster[id][i]))
+        random.shuffle(tmp)
+        x = []
+        y = []
+        for i in range(batch_size):
+            x.append(tmp[i][0])
+            if mode=="class":
+                y.append(tmp[i][1])
+            else:
+                y.append(tmp[i][2])
+        x = np.array(x)
+        y = np.array(y)
+        return x, y
+
     def next_batch_without_onehot(self, batch_size):
         x, y = self.images[self._i:self._i+batch_size], self.labels[self._i:self._i+batch_size]
         self._i = (self._i + batch_size) % len(self.images)
