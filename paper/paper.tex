@@ -434,7 +434,25 @@ Guideline:
 	\item Why fine tuning the clustered CDRP model into binary classifiers, and how we fine tune them
 \end{itemize}
 
+\todo{metion CIFAR-5}
 \subsection{CDRP Model Assembly}
+Based on the results of CDRP decomposition in VGG16-C and VGG16-D, we determine subclasses for CIFAR-5 and their relationship to the CDRP clusters by encoding samples using all CDRP models.
+Instead of using Venn diagram like the intro example in Figure~\ref{fig:assemble-example-venn}, we use the network diagram in Figure~\ref{fig:network-venn} to represent the relationship between subclasses and clusters.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{fig/network_venn.png}
+	\caption{Network Venn Diagram for CIFAR-5}
+	\label{fig:network-venn}
+\end{figure}
+
+The cluster nodes (boxes) on the right side of the figure represent CDRP clusters in VGG16-C, and those on the left side represent clusters in VGG16-D.
+The subclass nodes (circles) in the middle represent subclasses, the size of which indicate the number of samples belonging to the subclass and the color of which indicate the label assigned to it.
+A subclass node is connected with a cluster node iff. the subclass is a subset of the cluster.
+
+Since we decompose two networks into two sets of internally disjoint clusters, each subclass will fall into exactly two clusters from separate models.
+In other word, the encoding for a subclass is a two-hot encoding.
+\todo{This means that the assembly problem can be solved with more efficient algorithms.}
 
 \section{Experiments}
 \subsection{Verifying CDRP Models of VGGNets trained on CIFAR-100}
