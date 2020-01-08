@@ -338,7 +338,7 @@ As a result, the problem instance $k$ is solvable iff. there exists a $D$ with s
 By definition, the problem is an NP problem.
 \end{proof}
 
-The table in Figure~\ref{fig:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm.
+The table in Figure~\ref{fig:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in Figure~\ref{fig:assemble-example-venn}.
 If we only use the encoding from $d_1, d_2, d_3$, we find no two subclasses with different labels share the same encoding, and therefore certify the correctness of the feasible solution proposed before.
 For the partial classification task for $A_3$, using two bits from $d_2, d_4$ already provides distinguishable encoding for $A_{31}$ and the remaining dummy classes.
 
@@ -393,20 +393,52 @@ Based on the encoding method, we propose a search algorithm based on greedy heur
 	\end{algorithmic}
 \end{algorithm}
 
-The search is guided by the residual entropy of target subclasses and dummy subclasses.
+The search is guided by the residual entropy \eqref{eq:entropy} of target subclasses and dummy subclasses.
 \begin{equation}
 	H(C) = \sum_{c \in C} p(c)H(c) = \sum_{c \in C} p(c)\sum_{l \in \mathcal{L}'} p(c, l)\log\frac{1}{p(c, l)}
+	\label{eq:entropy}
 \end{equation}
+where $p(c)$ is the probability for encoding $c$ to occur, and $p(c, l)$ is the probability of a sample having encoding $c$ and label $l$.
+Note that the label ranges over $\mathcal{L}'$, the set of target labels and one dummy label, and all labels that are not target is defined to be equal to the dummy one.
+In each search iteration, the algorithm will choose the classifier set that minimizes the entropy greedily, so that the search could possibly to end with minimum search depth.
+
+\todo{Analysis}
 
 \section{Model Assembly based on CDRP Decomposition and Clustering}
 \label{sec:cdrp}
-\subsection{Critical Data Routing Path Model}
-\subsection{CDRP Model Clustering}
+In \cref{sec:assembly}, we have formalized the problem and proposed a general algorithm searching for a feasible solution to a search problem instance.
+In this section, we want to instantiate the assembly problem in a concrete setting.
+To do so, we need to find an efficient way to generate the input to the problem.
+More specifically, we need to find an initial set of binary classifiers with following constrains.
+\begin{itemize}
+	\item The initial set should guarantee at least one feasible solution for some $k$.
+	\item There should exist overlapping subclasses among classifiers to allow multiple choices, i.e., allow removing of redundant feature extractors.
+	\item We can not train a large set of binary classifiers from scratch, because it takes too many prior knowledge and time to get an initial set that have feasible solution with the space for improvements.
+\end{itemize}
+
+\paragraph{Remark.} We do not need to provide the subclasses in the input, because they can be derived from the initial set of classifiers.
+Given encodings under the initial classifier set, samples share the same encoding can be considered as a subclass, and there is no need to further split those subclasses.
+For example, in the intro example in Figure~\ref{fig:assemble-example-venn}, there is no need to distinguish $A_{11}$ and $A_{12}$ and we can group them as a single subclass.
+
+To satisfy the above constraints, we follow the previous work of Wang \textit{et al.} \cite{wang2018interpret} to use critical data routing path (CDRP) for generating the input.
+CDRP clustering allow us to decompose a large network model into several disjoint small ones.
+To have overlapping classifiers, we decompose two different networks on the same dataset and fine tuning the CDRP models into binary classifiers.
+We use image classification task on CIFAR-100 and VGG16 of type C and D for demonstration.
+
+\subsection{CDRP Decomposition and Clustering}
+Guideline:
+\begin{itemize}
+	\item How to train gates, the functionality of the gates, how to interpret gate weight (lambda) feature of samples (similar to original paper)
+	\item How to get decomposed classifiers: clustering
+	\item Why clustered CDRP models might work (PCA visualization demonstration) (not performance analysis, inference experiments later)
+	\item Why fine tuning the clustered CDRP model into binary classifiers, and how we fine tune them
+\end{itemize}
+
 \subsection{CDRP Model Assembly}
 
 \section{Experiments}
-\subsection{CDRP Models of VGGNet and ? trained on CIFAR-100}
-\subsection{Fusing VGGNet and ? for Specific Tasks through CDRP Assembly}
+\subsection{Verifying CDRP Models of VGGNets trained on CIFAR-100}
+\subsection{Fusing VGGNets for Specific Tasks through CDRP Assembly}
 
 \section{Related Work}
 The related work \dots
