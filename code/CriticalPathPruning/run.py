@@ -169,7 +169,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     assert args.dataset in ['imagenet', 'cifar'], "--dataset can only be 'imagenet' or 'cifar'."
 
-    d = CifarDataManager()
+    d = CifarDataManager(load_cluster=False)
     model = Model(
         learning_rate=args.learning_rate,
         L1_loss_penalty=args.l1_loss_penalty,
@@ -188,8 +188,8 @@ if __name__ == '__main__':
         if args.dataset == 'cifar':
             model.encode_class_data(i, train_images,save_folder = args.save_folder)
         elif args.dataset == 'imagenet':
-            model.encode_class_data(i, train_images, "vgg-imagenet/vgg16-imagenet.ckpt", NameMapping.imagenet_mapping_,
-                                    use_batch_norm=False, with_bias=True, vgg_type='D', output_size=1000,
+            model.encode_class_data(i, train_images, "vgg16-d/best.ckpt", NameMapping.default_mapping_,
+                                    use_batch_norm=False, with_bias=True, vgg_type='D', output_size=100,
                                     dataset_name='imagenet', verbose=args.verbose, save_folder = args.save_folder)
         print("Encoding class...")
         #calculate_total_by_weights(i, size=args.max_samples, dataset=args.dataset)

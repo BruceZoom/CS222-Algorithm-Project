@@ -9,7 +9,7 @@ from sklearn.utils import shuffle
 import os
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 class NameMapping:
@@ -18,6 +18,10 @@ class NameMapping:
     def default_mapping_(name):
         # print(name, name[:-2])
         return name[:-2]
+
+    @staticmethod
+    def identity_mapping_(name):
+        return name
 
     @staticmethod
     def imagenet_mapping_(name):
@@ -169,6 +173,7 @@ class Model():
                     name_prefix += ':0'
                     if name_prefix in self.AllGateVariables:
                         continue
+                print(name)
                 savedVariable[name_mapping(name)] = variable
             saver = tf.train.Saver(savedVariable)
             # saver = tf.train.Saver(max_to_keep = None)
