@@ -427,3 +427,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# targz
+*.tar.gz
+.ckpt*
