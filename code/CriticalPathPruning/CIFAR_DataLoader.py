@@ -33,16 +33,17 @@ class CifarLoader(object):
         self.class_image = None
         self.class_label = None
 
-    def load(self):
-        with open("../data/clusters.pkl","rb") as file:
-            self.cluster = pickle.load(file,encoding="bytes")
-        with open("../data/class_clusters.pkl","rb") as file:
-            self.class_cluster = pickle.load(file,encoding="bytes")
+    def load(self, load_cluster=False):
+        if load_cluster:
+            with open("../data/clusters.pkl","rb") as file:
+                self.cluster = pickle.load(file,encoding="bytes")
+            with open("../data/class_clusters.pkl","rb") as file:
+                self.class_cluster = pickle.load(file,encoding="bytes")
 
-        with open("../data/clusters_test.pkl","rb") as file:
-            self.cluster_test = pickle.load(file,encoding="bytes")
-        with open("../data/class_clusters_test.pkl","rb") as file:
-            self.class_cluster_test = pickle.load(file,encoding="bytes")
+            with open("../data/clusters_test.pkl","rb") as file:
+                self.cluster_test = pickle.load(file,encoding="bytes")
+            with open("../data/class_clusters_test.pkl","rb") as file:
+                self.class_cluster_test = pickle.load(file,encoding="bytes")
 
         data = [unpickle(f) for f in self._source]
         images = np.vstack(d["data"] for d in data)
@@ -182,7 +183,7 @@ class CifarLoader(object):
 
 # ============ Data Manager: Wrap the Data Loader===============
 class CifarDataManager(object):
-    def __init__(self):
+    def __init__(self, load_cluster=True):
         '''
         CIFAR 10 Data Set 
         '''
@@ -192,8 +193,8 @@ class CifarDataManager(object):
         '''
         CIFAR 100 Data Set 
         '''
-        self.train = CifarLoader(["train"]).load()
-        self.test = CifarLoader(["test"]).load()
+        self.train = CifarLoader(["train"]).load(load_cluster)
+        self.test = CifarLoader(["test"]).load(load_cluster)
 
 def display_cifar(images, size):
     n = len(images)
