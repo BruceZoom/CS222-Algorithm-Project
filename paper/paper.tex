@@ -682,6 +682,7 @@ We can determine the class label with this encoding, the accuracy of which is al
 
     \caption{Encoding and Accuracy of Each Class Label}
     \label{tab:encoding-and-accuarcy}
+	\scalebox{0.9}{
 	\begin{tabular}{ccccccc}
 	\toprule
 	Class ID & 0 & 1 & 2 & 3 & 4 & Overall \\
@@ -694,6 +695,7 @@ We can determine the class label with this encoding, the accuracy of which is al
 	\bottomrule
 
 	\end{tabular}
+	}
 \end{table}
 
 From \cref{tab:encoding-and-accuarcy}, we find the overall accuracy is quite high if prune ratio $pr\leq0.9$ while the accuracy drops dramatically when $pr=0.95$ since we prune too much channels or even destroy the connectivity of the network. 
@@ -722,8 +724,8 @@ Their framework are task-specific and is difficult to apply their techniques in 
 And their works do not aim to reduce the network complexity during the fusion process.
 
 \section{Conclusion}
-To develop task-specific and light-weighted models for edge devices, we propose a general assembly framework for binary classifers in this paper.
-We formulate the choice of these classifiers into a search problem and design a heuristic search algorithm for it.
+To develop task-specific and light-weighted models for edge devices, we propose a general assembly framework for binary classifiers in this paper.
+We formulate the problem of selecting and combining classifiers into a search problem and design a heuristic search algorithm to solve it.
 We implement this framework based on CDRP method for image classification task. 
 In our experiment, we successfully reduce about $90\%$ computing consumption by pruning $90\%$ channels in the network while reach a high classification accuracy.
 
