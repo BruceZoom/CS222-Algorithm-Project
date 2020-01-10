@@ -338,12 +338,12 @@ As a result, the problem instance $k$ is solvable iff. there exists a $D$ with s
 By definition, the problem is an NP problem.
 \end{proof}
 
-The table in Figure~\ref{fig:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in Figure~\ref{fig:assemble-example-venn}.
+Table~\ref{tab:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in Figure~\ref{fig:assemble-example-venn}.
 If we only use the encoding from $d_1, d_2, d_3$, we find no two subclasses with different labels share the same encoding, and therefore certify the correctness of the feasible solution proposed before.
 For the partial classification task for $A_3$, using two bits from $d_2, d_4$ already provides distinguishable encoding for $A_{31}$ and the remaining dummy classes.
 
 % \linespread{1.1}
-\begin{figure}[h]
+\begin{table}[h]
 	\begin{tabular}{|c|c|cccc|}
 	\cline{1-6}
 	\multicolumn{2}{|c|}{} & $d_1$ & $d_2$ & $d_3$ & $d_4$ \\ \cline{1-6}
@@ -355,8 +355,8 @@ For the partial classification task for $A_3$, using two bits from $d_2, d_4$ al
 	$A_3$ & $A_{31}$ & 0 & 1 & 0 & 1 \\ \cline{1-6}
 	\end{tabular}
 	\caption{Encoding for the Intro Example}
-	\label{fig:assemble-example-encoding}
-\end{figure}
+	\label{tab:assemble-example-encoding}
+\end{table}
 % \linespread{1.0}
 
 \subsection{The Heuristic Search Algorithm}
@@ -515,7 +515,7 @@ From Figure~\ref{fig:vgg-cluster}, we determine the possibile labels of samples 
 	\label{tab:cluster_label}
 \end{table}
 
-Since we want to get 0/1-classifiers, we slightly change the original VGGNet architecture in output dimension of the last Fully-Connected Layer from $100$ to $2$. 
+Since we want to get binary-classifiers, we slightly change the original VGGNet architecture in output dimension of the last Fully-Connected Layer from $100$ to $2$. 
 We also prune the original full VGGNet in the guide of CDRP with a prune ratio $0.9$ i.e. $90\%$ of channels in all layers are pruned. 
 As a result, each classifer only has $10\%$ parameters of the original full network.
 
@@ -523,11 +523,52 @@ As a result, each classifer only has $10\%$ parameters of the original full netw
 We implement finetune on these classifers to make the results more meaningful and accurate. 
 Since the negative samples are greatly more than positive ones in the dataset, we need to implement some strategies to balance them i.e. in each iteration we ensure the ratio of positive and negative samples is about $1:1$ in the batch.
 
-We train each classifer with $1500$ iterations with a batch size $200$. The learning rate is $0.1$ for the first $1200$ iterations and $0.01$ for the remaining $300$. We only train the pruned model i.e. weights of the pruned channels will remain zero.
+We train each classifer with $1500$ iterations with a batch size $200$. 
+The learning rate is $0.1$ for the first $1200$ iterations and $0.01$ for the remaining $300$ iterations. 
+We only train the pruned model i.e. weights of the pruned channels will remain zero.
+After finetune, most of the classifers can reach an accuracy more than 80\%, which is much higher than the overall accuracy of the original full network.
  
 
  
 \subsection{Fusing VGGNets for Specific Tasks through CDRP Assembly}
+\paragraph{Fusion} We implement the heuristic search in Algorithm~\ref{tab:heuristic-search} to fuse the classifiers. 
+Since we want to finish a specific task of classifying among five classes, we set a upper bound of the number of classifiers $k=4$. 
+After we select these classifiers with this algorithm, different results of each classifier ($0$ and $1$ represent the sample is or isn't in the cluster respectively) correspond to a unique label.
+In our implementation, the algorithm choose four classifiers: 3,4,1,2 in order. 
+The accuracy of the four classifiers are shown in Table~\ref{tab:classifer-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
+
+\begin{table}[!htp]
+	\begin{tabular}{|c|c|c|c|c|}
+	\hline
+	& classifier-3 & classifier-4 & classifier-1 & classifier-2 \\
+	\hline
+	Accuracy & 96.0\% & 86.0\% & 91.5\% & 87.0\%\\
+	\hline
+	\end{tabular}
+    \caption{Accuracy of Chosen Binary-Classifiers}
+    \label{tab:classifer-accuracy}
+\end{table}
+
+\paragraph{Verifying Result.}By combining the 0/1-results of the four classifiers, we can determine the class label unqiuely of one test sample.
+For example, if the result of classifer-3 is $0$ whether results of others are all $1$s, the encoding will be $0111$ and we can determine the sample is in class $0$. 
+
+Actually, we can determine the class uniquely with the prefix of encodings. 
+For instance, if the result of classifer-3 is $0$, we don't need to take other classifers into consideration since the only class $0$ is possible in cluster-3 according to Table~\ref{tab:cluster_label}
+
+The corresponding encoding of each class label is shown in Table~\ref{tab:encoding-and-accuarcy}. We can determine the class label with this encoding, the accuracy of which is also shown in Table~\ref{tab:encoding-and-accuarcy}.
+
+\begin{table}[!htp]
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+	\hline
+	& class-0 & class-1 & class-2 & class-3 & class-4 & Overall \\
+	\hline
+	Encoding &0 & 110 & 1110 &10 & 1111 &\\
+	\hline
+	\end{tabular}
+    \caption{Encoding and Accuracy of Each Class Label}
+    \label{tab:encoding-and-accuarcy}
+\end{table}
+
 
 \section{Related Work}
 The related work \dots
