@@ -416,6 +416,8 @@ More specifically, we need to find an initial set of binary classifiers with fol
 	\item We can not train a large set of binary classifiers from scratch, because it takes too many prior knowledge and time to get an initial set that have feasible solution with the space for improvements.
 \end{itemize}
 
+
+
 \paragraph{Remark.} We do not need to provide the subclasses in the input, because they can be derived from the initial set of classifiers.
 Given encodings under the initial classifier set, samples share the same encoding can be considered as a subclass, and there is no need to further split those subclasses.
 For example, in the intro example in Figure~\ref{fig:assemble-example-venn}, there is no need to distinguish $A_{11}$ and $A_{12}$ and we can group them as a single subclass.
@@ -433,6 +435,64 @@ Guideline:
 	\item Why clustered CDRP models might work (PCA visualization demonstration) (not performance analysis, inference experiments later)
 	\item Why fine tuning the clustered CDRP model into binary classifiers, and how we fine tune them
 \end{itemize}
+
+Critical Data Routing Path is a method to find a path containing critical nodes, whose removal causes great preformance setback, from a existing trained model. We introduce CDRP to decomposite one existing pretrained model from selecting representing CDRPs in a given dataset.
+
+\paragraph{CDRP extraction}
+
+From the original model, we introduce a scalar control gate to every output channel of one layer, with nonnegative and sparse value. They will be multiplied to the layer’s output channelwise, resulting in the routing nodes. The nodes that are not suppressed, or have control gate weight greater zero, will be linked together to compose the routing paths. Then finding the critical data routing path can be reduced to optimize the weights of the control gates.
+
+Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sampe we follow the procedure of Distillation Guided Routing (algorithm \ref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample.
+
+\begin{algorithm}
+	\caption{Distillation Guided Routing, introduced in paper \cite{wang2018interpret}}
+	\label{alg:dgr}
+	\begin{algorithmic}[1]
+		\Require Input image $\boldsymbol{x}$, pretrained network $f_\theta(\cdot)$, control gates $\boldsymbol{\Lambda}$ initialized with 1, balanced parameter $\gamma$. Max iterations $T$, SGD optimizer
+		\Ensure identified CDRPs representation $\boldsymbol{v}$
+		\State original prediction class $i \gets \arg\max f_\theta(\boldsymbol{x})$
+		\For{$t \gets 1$ to $T$}
+			\State compute loss $cur\_loss$: $$\mathcal{L}\left(f_\theta(\boldsymbol{x}), f_\theta(\boldsymbol{x}; \boldsymbol{\Lambda})\right) + \gamma \sum_k |\boldsymbol{\lambda}_k|_1$$
+			\State compute control gates gradients $\boldsymbol{\Lambda}$: $$\frac{\partial Loss}{\partial \boldsymbol{\Lambda}} = \frac{\partial \mathcal{L}}{\partial \boldsymbol{\Lambda}} + \gamma \times \mathrm{sign}(\boldsymbol{\Lambda})$$
+			\State update $\boldsymbol{\Lambda}$ by SGD optimzier and clip $\boldsymbol{\Lambda}$ to be nonnegative
+			\State new prediction class $j \gets \arg\max f_\theta(\boldsymbol{x};\boldsymbol{\Lambda})$
+			\If{$i=j$} \Comment keep the prediction same
+				\If{$cur\_loss$ is minimun}
+					\State $\boldsymbol{v} \gets \mathrm{concatenate}(\boldsymbol{\Lambda})$
+				\EndIf
+			\EndIf
+		\EndFor		
+	\end{algorithmic}
+\end{algorithm}
+
+\paragraph{CDRP clustering}
+
+Once the gate vectors of all samples is obtained, we use k-means clusterng to cluster these vectors. With clustering, we can prune the original model according to the samples within one cluster and produce a smaller model. 
+
+\paragraph{Model pruning and fine tuning}
+
+We use methods introduced in paper \cite{LiDongYue} to prune the model according to gate vector of cluster centers (algorithm \ref{alg:prune}).
+
+\begin{algorithm}
+	\caption{Model Pruning of clusters}
+	\label{alg:prune}
+	\begin{algorithmic}[1]
+		\Require input images of one given cluster $TargetImages$, pretrained network $f_\theta(\cdot)$, $prune\_ratio$
+		\Ensure Pruned neural network $f_{\theta'}(\cdot)$
+		\State $Paths = \{\}$
+		\For{each given training image $\boldsymbol{x}$ in $TargetImages$}
+			\State $Path_{\boldsymbol{x}} = \mathrm{DistillationGuidedRouting}(\boldsymbol{x}, f_\theta(\cdot))$
+			\State $Paths.add(Path_{\boldsymbol{x}})$
+		\EndFor		
+		\State compute cluster-wise critical data routing path $SumPath$ via merging $Paths$, resulting gate vector $\boldsymbol{\Lambda} = [\boldsymbol{\lambda}_k]$
+		\For{$\boldsymbol{\lambda}_k$ in the $k$-th convolution layers}
+			\State sort all $\lambda$s in $\boldsymbol{\lambda}_k$ decreasingly and discard the channels in the last within range of $prune\_ration$
+		\EndFor
+	\end{algorithmic}
+\end{algorithm}
+
+
+
 
 \todo{metion CIFAR-5}
 \subsection{CDRP Model Assembly}
