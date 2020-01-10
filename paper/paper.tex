@@ -678,7 +678,9 @@ We can determine the class label with this encoding, the accuracy of which is al
 
 From Table~\ref{tab:encoding-and-accuarcy}, we find the overall accuracy is quite high if prune ratio $pr\leq0.9$ while the accuracy drops dramatically when $pr=0.95$ since we prune too much channels or even destroy the connectivity of the network. 
 When it comes to the trade-off between parameter number and overall accuracy, it is suitable to set prune ratio $pr=0.9$.
-Compared to the accuracy of original full model in these $5$ classes ($70.57\%$), our classifier not only achieve higher precision but also improve the efficiency. When $pr=0.9$, we can inference with the $4$ classifiers in parallel, which can save about $90\%$ computing consumption on a single device.
+
+Compared to the accuracy of original full model in these $5$ classes ($70.57\%$), our classifier not only achieve higher precision but also improve the efficiency. 
+When $pr=0.9$, we can infer with the $4$ binary-classifiers in parallel instead of applying the original network, which can save about $90\%$ computing consumption on a single device as well as improve the accuracy.
 
 \section{Related Work}
 The related work \dots
