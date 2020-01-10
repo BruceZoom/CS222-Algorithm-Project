@@ -338,12 +338,16 @@ As a result, the problem instance $k$ is solvable iff. there exists a $D$ with s
 By definition, the problem is an NP problem.
 \end{proof}
 
+<<<<<<< HEAD
 \Cref{tab:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in \cref{fig:assemble-example-venn}.
+=======
+Figure~\ref{fig:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in Figure~\ref{fig:assemble-example-venn}.
+>>>>>>> ccbd856eb5256270a5207cc4134332492e0f84e1
 If we only use the encoding from $d_1, d_2, d_3$, we find no two subclasses with different labels share the same encoding, and therefore certify the correctness of the feasible solution proposed before.
 For the partial classification task for $A_3$, using two bits from $d_2, d_4$ already provides distinguishable encoding for $A_{31}$ and the remaining dummy classes.
 
 % \linespread{1.1}
-\begin{table}[h]
+\begin{figure}[h]
 	\begin{tabular}{|c|c|cccc|}
 	\cline{1-6}
 	\multicolumn{2}{|c|}{} & $d_1$ & $d_2$ & $d_3$ & $d_4$ \\ \cline{1-6}
@@ -355,15 +359,15 @@ For the partial classification task for $A_3$, using two bits from $d_2, d_4$ al
 	$A_3$ & $A_{31}$ & 0 & 1 & 0 & 1 \\ \cline{1-6}
 	\end{tabular}
 	\caption{Encoding for the Intro Example}
-	\label{tab:assemble-example-encoding}
-\end{table}
+	\label{fig:assemble-example-encoding}
+\end{figure}
 % \linespread{1.0}
 
 \subsection{The Heuristic Search Algorithm}
 \label{sec:assembly-algorithm}
 Based on the encoding method, we propose a search algorithm based on greedy heuristics in \cref{tab:heuristic-search} for finding a feasible solution to the problem instance with constraint $k$.
 
-\begin{algorithm}
+\begin{algorithm}[h]
 	\caption{The General Algorithm}
 	\label{tab:heuristic-search}
 	\begin{algorithmic}[1]
@@ -577,7 +581,9 @@ We notice that some clusters only contain extremely few samples such as Cluster-
 \paragraph{Classifiers.} Except some too small ones, we consider one cluster as a classifer. Each classifier judges whether the test sample should in the corresponding cluster. 
 From \cref{fig:vgg-cluster}, we determine the possibile labels of samples in each cluster as is shown in \cref{tab:cluster_label}. 
 
-\begin{table}[!htp]
+\begin{table}[h]
+	\caption{Corresponding Class Labels of Each Cluster}
+	\label{tab:cluster_label}
 	\begin{tabular}{|c|c|c|}
 	\hline
 	\multirow{2}{*}{Classifier} &\multicolumn{2}{|c|}{Possible Class Labels}\\
@@ -595,10 +601,7 @@ From \cref{fig:vgg-cluster}, we determine the possibile labels of samples in eac
 	classifier-10,12 & 1 & 0,1,2,3,4,5\\
 	classifier-11 & 3 & 0,1,2,3,4,5\\
 	\hline
-
 	\end{tabular}
-	\caption{Corresponding Class Labels of Each Cluster}
-	\label{tab:cluster_label}
 \end{table}
 
 Since we want to get binary-classifiers, we slightly change the original VGGNet architecture in output dimension of the last Fully-Connected Layer from $100$ to $2$. 
@@ -623,16 +626,16 @@ After we select these classifiers with this algorithm, different results of each
 In our implementation, the algorithm choose four classifiers: 3,4,1,2 in order. 
 The accuracy of the four classifiers are shown in \cref{tab:classifer-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
 
-\begin{table}[!htp]
+\begin{table}[h]
+    \caption{Accuracy of Chosen Binary-Classifiers}
+    \label{tab:classifer-accuracy}
 	\begin{tabular}{|c|c|c|c|c|}
 	\hline
-	& classifier-3 & classifier-4 & classifier-1 & classifier-2 \\
+	Classifier ID & 3 & 4 & 1 & 2 \\
 	\hline
 	Accuracy & 96.0\% & 86.0\% & 91.5\% & 87.0\%\\
 	\hline
 	\end{tabular}
-    \caption{Accuracy of Chosen Binary-Classifiers}
-    \label{tab:classifer-accuracy}
 \end{table}
 
 \paragraph{Verifying Result.}By combining the 0/1-results of the four classifiers, we can determine the class label unqiuely of one test sample.
@@ -643,16 +646,16 @@ For instance, if the result of classifer-3 is $0$, we don't need to take other c
 
 The corresponding encoding of each class label is shown in \cref{tab:encoding-and-accuarcy}. We can determine the class label with this encoding, the accuracy of which is also shown in \cref{tab:encoding-and-accuarcy}.
 
-\begin{table}[!htp]
+\begin{table}[h]
+    \caption{Encoding and Accuracy of Each Class Label}
+    \label{tab:encoding-and-accuarcy}
 	\begin{tabular}{|c|c|c|c|c|c|c|}
 	\hline
-	& class-0 & class-1 & class-2 & class-3 & class-4 & Overall \\
+	Class ID & 0 & 1 & 2 & 3 & 4 & Overall \\
 	\hline
 	Encoding &0 & 110 & 1110 &10 & 1111 &\\
 	\hline
 	\end{tabular}
-    \caption{Encoding and Accuracy of Each Class Label}
-    \label{tab:encoding-and-accuarcy}
 \end{table}
 
 

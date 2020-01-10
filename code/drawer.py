@@ -100,12 +100,12 @@ def plot_3d_cluster(data, labels, target, n_cluster):
     plt.scatter(centers[:, 0], centers[:, 1], centers[:, 2], marker='s', label='centers', c='b')
 
 
-def plot_network_venn(data, subclasses, cluster_sets, ncol):
+def plot_network_venn(data, subclasses, cluster_sets, ncol, model_labels=None):
     count = lambda x: sum((data[:, 0] == x[0]) & (data[:, 1] == x[1]))
     per_col = np.ceil(subclasses.shape[0] / ncol)
     labels = subclasses[:, -1]
     subclasses = subclasses[:, :-1]
-    stride = 15 * 0.5 / per_col
+    stride = 11 / per_col
     markers = dict()
     cluster_markers = dict()
 
@@ -115,7 +115,7 @@ def plot_network_venn(data, subclasses, cluster_sets, ncol):
     for i, subclass in enumerate(subclasses):
         for j, cl in enumerate(subclass):
             plt.plot([1 + 1 * (i // per_col), j * 4], [stride * (i % per_col) - 0.5, cl * 1],
-                     c=plt.cm.Blues(j * 0.4 + 0.4))
+                     c=plt.cm.Blues(j * 0.4 + 0.45))
     for i, subclass in enumerate(subclasses):
         G.add_node(i, encoding=subclass, size=count(subclass) * 5 + 200, shape='skyblue',
                    pos=(1 + 1 * (i // per_col) - 0.2, stride * (i % per_col) - 0.5))
@@ -131,9 +131,12 @@ def plot_network_venn(data, subclasses, cluster_sets, ncol):
 
     nx.draw_networkx(G, node_size=0, pos=G.nodes(data='pos'))
     lines = list(markers.values()) + list(cluster_markers.values())
-    labels = ['class {}'.format(label) for label in markers.keys()] + ['model {}'.format(label) for label in
-                                                                       cluster_markers.keys()]
-    plt.legend(lines, labels, loc=1, ncol=1, bbox_to_anchor=(0.9, 1))
+    labels = ['class {}'.format(label) for label in markers.keys()]
+    if model_labels is None:
+        labels += ['model {}'.format(label) for label in cluster_markers.keys()]
+    else:
+        labels += model_labels
+    plt.legend(lines, labels, loc=1, ncol=1, bbox_to_anchor=(0.92, 1))
     plt.xticks([], [])
     plt.yticks([], [])
     plt.tight_layout()
@@ -187,10 +190,10 @@ def run_network_venn(encoding_path="data/encoding_merged.txt", threshold=6, ncol
     subclasses, freq = np.unique(list(data[:, :]), axis=0, return_counts=True)
     tmp = subclasses[freq > threshold]
     tmp = np.array(sorted(list(tmp), key=lambda x: x[-1]))
-    plot_network_venn(data, tmp, [np.unique(tmp[:, i]) for i in range(tmp.shape[1] - 1)], ncol)
+    plot_network_venn(data, tmp, [np.unique(tmp[:, i]) for i in range(tmp.shape[1] - 1)], ncol, ['VGG16-D', 'VGG16-C'])
 
 
 if __name__ == '__main__':
     # run_pca_gif()
-    run_network_venn()
+    run_network_venn('data/vgg16c+d/merged.txt', 5)
     plt.show()
