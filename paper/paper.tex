@@ -448,31 +448,23 @@ More specifically, we need to find an initial set of binary classifiers with fol
 To satisfy the above constraints, we follow the previous work of Wang \textit{et al.} \cite{wang2018interpret} to use critical data routing path (CDRP) for generating the input.
 CDRP clustering allow us to decompose a large network model into several disjoint small ones.
 To have overlapping classifiers, we decompose two different networks on the same dataset and fine tuning the CDRP models into binary classifiers.
-We use image classification task on CIFAR-100 and VGG16 of type C and D for demonstration.
+We use image classification task on CIFAR-100 and VGG16 of type C and type D for demonstration.
 
 \paragraph{Remark.} We do not need to provide the subclasses in the input, because they can be derived from the initial set of classifiers.
 Given encodings under the initial classifier set, samples share the same encoding can be considered as a subclass, and there is no need to further split those subclasses.
-For example, in the intro example in Figure~\ref{fig:assemble-example-venn}, there is no need to distinguish $A_{11}$ and $A_{12}$ and we can group them as a single subclass.
+For example, in the intro example in \Cref{fig:assemble-example-venn}, there is no need to distinguish $A_{11}$ and $A_{12}$ and we can group them as a single subclass.
 
 \subsection{CDRP Decomposition and Clustering}
-Guideline:
-\begin{itemize}
-	\item How to train gates, the functionality of the gates, how to interpret gate weight (lambda) feature of samples (similar to original paper)
-	\item How to get decomposed classifiers: clustering
-	\item Why clustered CDRP models might work (PCA visualization demonstration) (not performance analysis, inference experiments later)
-	\item Why fine tuning the clustered CDRP model into binary classifiers, and how we fine tune them
-\end{itemize}
-
 Critical Data Routing Path is a method to find a path containing critical nodes, whose removal causes great preformance setback, from an existing trained model. We introduce CDRP to decomposite one existing pretrained model from selecting representing CDRPs in a given dataset.
 
-\paragraph{CDRP extraction}
+\paragraph{CDRP extraction.}
 
-From the original model, we introduce a scalar control gate to every output channel of one layer, with nonnegative and sparse value. They will be multiplied to the layer’s output channelwise, resulting in the routing nodes. The nodes that are not suppressed, or have control gate weight greater zero, will be linked together to compose the routing paths. Then finding the critical data routing path can be reduced to optimize the weights of the control gates.
+From the original model, we introduce a scalar control gate to every output channel of one layer, with nonnegative and sparse value. They will be multiplied to the layer's outputs channelwise, resulting in the routing nodes. The nodes that are not suppressed, or have control gate weight greater zero, will be linked together to compose the routing paths. Then finding the critical data routing path can be reduced to optimize the weights of the control gates.
 
 Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sample we follow the procedure of Distillation Guided Routing (\cref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample. As the original paper \cite{wang2018interpret} states, these gate values encode patterns inside the input images, e.g. tinca in horizontal positions or squat positions will have different encodings.
 
 \begin{algorithm}
-	\caption{Distillation Guided Routing, introduced in paper \cite{wang2018interpret}}
+	\caption{Distillation Guided Routing, from \cite{wang2018interpret}}
 	\label{alg:dgr}
 	\begin{algorithmic}[1]
 		\Require Input image $\boldsymbol{x}$, pretrained network $f_\theta(\cdot)$, control gates $\boldsymbol{\Lambda}$ initialized with 1, balanced parameter $\gamma$. Max iterations $T$, SGD optimizer
@@ -492,13 +484,13 @@ Critical data routing path is extracted through optimizaition of control gates v
 	\end{algorithmic}
 \end{algorithm}
 
-\paragraph{CDRP clustering}
+\paragraph{CDRP clustering.}
 
 The fact that CDRP as encoding of samples directly leads to the idea that decompoisite one large model into several smaller models, each of which processing one pattern of input data. Once the gate vectors of all samples is obtained, we use k-means clusterng to cluster these vectors to gather samples sharing similar patterns together.
 
 The visualization of clustering results is presented in \cref{fig:vgg-cluster-pca}.
 
-\begin{figure}[!htp]
+\begin{figure}
 	\centering
 	\subfigure[Result of VGG-16(C)] {
 		\includegraphics[width=\linewidth]{fig/vgg16c-cluster.png}
@@ -516,7 +508,7 @@ From the visualization result, it can be observed that the clustering can distin
 
 The results shows we can derive a good basis of binary classifiers through these clusters. First, the good mapping from cluster to class label means we can use these binary classifiers to construct subclasses mentioned in the beginning of this section. The fact that gate vectors from different models varies will prevent the trival case that cluster one-to-one map to class label, leading to substantial reduction on number of model parameters.
 
-\paragraph{Model pruning and fine tuning}
+\paragraph{Model pruning and fine tuning.}
 
 We use methods introduced in paper \cite{LiDongYue} to prune the model according to gate vector of cluster centers (\cref{alg:prune}).
 
@@ -568,31 +560,33 @@ In other word, the encoding for a subclass is a two-hot encoding.
 This means that the assembly problem can be solved with more efficient algorithms.
 
 \section{Experiments}
+In this section, we implement the CDRP decomposition and assembly framework instantiated in \cref{sec:cdrp}.
+We perform K-Means on the CDRP control gates of each sample and extract binary classifiers from clusters' corresponding CDRP model.
+We apply the search \cref{tab:heuristic-search} in \cref{sec:assembly-algorithm} to fuse those classifiers, and we test the performance of each binary classifiers and the combined model.
+
 \label{sec:experiments}
 \subsection{Verifying CDRP Models of VGGNets trained on CIFAR-100}
-In this section, we perform K-Means on the CDRP control gates of each sample. For each cluster, we get a binary-classifier to determine whether the test sample should be in the cluster. Then, we fine tune each classifier in the CIFAR-100 dataset.
-
 \paragraph{Clusters.} For VGGNet, we generate $1.5$ clusters per class.
 Then, we get $14$ clusters from $5$ classes, among which $7$ clusters are from VGG16-C and $7$ clusters from VGG16-D. 
 
-The sample distribution of each cluster is shown in Figure~\ref{fig:vgg-cluster}.
+The sample distribution of each cluster is shown in \Cref{fig:vgg-cluster}.
 
-\begin{figure}[!htp]
+\begin{figure}[h]
     \centering
-\subfigure[Clusters from VGG-C]{
-    \begin{minipage}[t]{1\linewidth}
-        \includegraphics[height=1.5in,width=2.8in]{fig/chart1.pdf}
-        \label{fig:net2a}
+    \begin{minipage}{0.99\linewidth}
+		\subfigure[Clusters from VGG-C]{
+			\includegraphics[width=\linewidth]{fig/chart1.pdf}
+			\label{fig:net2a}
+		}
     \end{minipage}
-}
 
     %\vfill
-\subfigure[Clusters from VGG-D]{
-    \begin{minipage}[t]{1\linewidth}
-        \includegraphics[height=1.5in,width=2.8in]{fig/chart2.pdf}
-        \label{fig:net2b}
+    \begin{minipage}{0.99\linewidth}
+		\subfigure[Clusters from VGG-D]{
+			\includegraphics[width=\linewidth]{fig/chart2.pdf}
+			\label{fig:net2b}
+		}
     \end{minipage}
-}
     \caption{Sample Distribution of Clusters from Different Types of VGGNets}
     \label{fig:vgg-cluster}
 
@@ -645,9 +639,8 @@ With a prune ratio $pr\leq0.9$, most of the classifiers can reach an accuracy mo
 
  
 \subsection{Fusing VGGNets for Specific Tasks through CDRP Assembly}
-In this section, we implement the heuristic search in \cref{tab:heuristic-search} to fuse the classifiers. According to the 0/1 result of each classifier, we can get an unique encoding for each sample, which corresponds to a unqiue label so that we can determine the class of each test sample.
 
-\paragraph{Fusion}We implement \cref{tab:heuristic-search} to fuse the classifiers since we want to finish a specific task of classifying among five classes, we set a upper bound of the number of classifiers $k=4$. 
+\paragraph{Fusion.} We implement \cref{tab:heuristic-search} to fuse the classifiers since we want to finish a specific task of classifying among five classes, we set a upper bound of the number of classifiers $k=4$. 
 After we select these classifiers with this \cref{tab:heuristic-search}, different results of each classifier ($0$ and $1$ represent the sample is or isn't in the cluster respectively) correspond to a unique label.
 In our implementation, the algorithm choose four classifiers: 3,4,1,2 in order. 
 The accuracy of the four classifiers with different prune ratio is shown in \cref{tab:classifier-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
