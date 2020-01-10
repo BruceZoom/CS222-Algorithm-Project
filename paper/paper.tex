@@ -442,7 +442,7 @@ Critical Data Routing Path is a method to find a path containing critical nodes,
 
 From the original model, we introduce a scalar control gate to every output channel of one layer, with nonnegative and sparse value. They will be multiplied to the layer’s output channelwise, resulting in the routing nodes. The nodes that are not suppressed, or have control gate weight greater zero, will be linked together to compose the routing paths. Then finding the critical data routing path can be reduced to optimize the weights of the control gates.
 
-Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sampe we follow the procedure of Distillation Guided Routing (algorithm \ref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample.
+Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sampe we follow the procedure of Distillation Guided Routing (algorithm \ref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample. As the original paper \cite{wang2018interpret} states, these gate values encode patterns inside the input images, e.g. tinca in horizontal positions or squat positions will have different encodings.
 
 \begin{algorithm}
 	\caption{Distillation Guided Routing, introduced in paper \cite{wang2018interpret}}
@@ -467,7 +467,27 @@ Critical data routing path is extracted through optimizaition of control gates v
 
 \paragraph{CDRP clustering}
 
-Once the gate vectors of all samples is obtained, we use k-means clusterng to cluster these vectors. With clustering, we can prune the original model according to the samples within one cluster and produce a smaller model. 
+The fact that CDRP as encoding of samples directly leads to the idea that decompoisite one large model into several smaller models, each of which processing one pattern of input data. Once the gate vectors of all samples is obtained, we use k-means clusterng to cluster these vectors to gather samples sharing similar patterns together.
+
+The visualization of clustering results is presented in figure \ref{fig:vgg-cluster-pca}.
+
+\begin{figure}[!htp]
+	\centering
+	\subfigure[Result of VGG-16(C)] {
+		\includegraphics[width=\linewidth]{fig/vgg16c-cluster.png}
+        \label{fig:vgg16c-cluster}
+	}
+	\subfigure[Result of VGG-19(D)] {
+		\includegraphics[width=\linewidth]{fig/vgg16d-cluster.png}
+        \label{fig:vgg16d-cluster}
+    }
+    \caption{Visualization of clustering results. The axes are the first two components of of PCA results on all extracted gate vectors. The figure in the top is the result of VGG-16 (type C) trained on cifar-100 dataset, and the one below is the result of VGG-16 (type D) fine-tuned on cifar-100 initialized with pretrained weights on ImageNet. Different colors represent different class labels in cifar-100 dataset, and the cluster centers are denoted as blue squares.}
+    \label{fig:vgg-cluster-pca}
+\end{figure}
+
+From the visualization result, it can be observed that the clustering can distinguish samples of difference class lables, i.e. samples in one cluster are not prone to have different class labels. Besides, gate vectors extracted on the same data by different models differs.
+
+The results shows we can derive a good basis of binary classifers through these clusters. First, the good mapping from cluster to class label means we can use these binary classifiers to construct subclasses mentioned in the beginning of this section. The fact that gate vectors from different models varies will prevent the trival case that cluster one-to-one map to class label, leading to substantial reduction on number of model parameters.
 
 \paragraph{Model pruning and fine tuning}
 
@@ -491,7 +511,14 @@ We use methods introduced in paper \cite{LiDongYue} to prune the model according
 	\end{algorithmic}
 \end{algorithm}
 
-Afterwards we modify the network architecture of fully connected layers to form a binary classifer $g_{\theta'}(\cdot)$. We finetune this model with samples having positive labels in the clusterwhich is used to prune the model, and all other samples having negative labels.
+Afterwards we modify the network architecture of fully connected layers to form a binary classifer $g_{\theta'}(\cdot)$. The reason to do this includes:
+\begin{itemize}
+	\item It has less parameters than 100-class classifers.
+	\item It is easier to train, i.e. easier to have higher accuarcy.
+	\item Weights of convolution layers in the orginal model could be reused. We just need to finetune the model without running long sessions to train from scratch.
+\end{itemize} 
+
+We finetune this model with samples having positive labels in the clusterwhich is used to prune the model, and all other samples having negative labels. 
 
 
 \todo{metion CIFAR-5}
