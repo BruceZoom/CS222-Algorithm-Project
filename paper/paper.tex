@@ -369,8 +369,8 @@ Based on the encoding method, we propose a search algorithm based on greedy heur
 	\label{tab:heuristic-search}
 	\begin{algorithmic}[1]
 		\Require The inputs to the assembly problem;
-		\Ensure $D$, a classifier set satisfying constraints, or $\emptyset$ if not feasible.
-		\State $Q \gets \emptyset$; \Comment A priority queue, the last element $h$ is the key
+		\Ensure $D$, a classifier set satisfying constraints, or $\varnothing$ if not feasible.
+		\State $Q \gets \varnothing$; \Comment A priority queue, the last element $h$ is the key
 		\Function{Expand}{$D$} \Comment $D$, the classifier set
 			\For{$d \in \mathcal{D} - D$}
 				\State Calculate the encoding $C$ using $D \cup \{d\}$;
@@ -379,8 +379,8 @@ Based on the encoding method, we propose a search algorithm based on greedy heur
 			\EndFor
 		\EndFunction
 		\Function{HeuristicSearch}{}
-			\State $\Call{Expand}{\emptyset}$;
-			\While{$Q \neq \emptyset$}
+			\State $\Call{Expand}{\varnothing}$;
+			\While{$Q \neq \varnothing$}
 				\State $(D, C, h) \gets Pop(Q)$;
 				\If{$e_0 == 0$}
 					\State \Return $D$;
@@ -389,7 +389,7 @@ Based on the encoding method, we propose a search algorithm based on greedy heur
 					\State $\Call{Expand}{D}$;
 				\EndIf
 			\EndWhile
-			\State \Return $\emptyset$;
+			\State \Return $\varnothing$;
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
