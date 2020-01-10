@@ -520,10 +520,9 @@ Afterwards we modify the network architecture of fully connected layers to form 
 
 We finetune this model with samples having positive labels in the clusterwhich is used to prune the model, and all other samples having negative labels. 
 
-
-\todo{metion CIFAR-5}
+%\todo{metion CIFAR-5}
 \subsection{CDRP Model Assembly}
-Based on the results of CDRP decomposition in VGG16-C and VGG16-D, we determine subclasses for CIFAR-5 and their relationship to the CDRP clusters by encoding samples using all CDRP models.
+Based on the results of CDRP decomposition in VGG16-C and VGG16-D, we determine subclasses for CIFAR-5	\footnote{CIFAR-5 is a shorthand refering to samples having the first 5 class labels in CIFAR-100.} and their relationship to the CDRP clusters by encoding samples using all CDRP models.
 Instead of using Venn diagram like the intro example in Figure~\ref{fig:assemble-example-venn}, we use the network diagram in Figure~\ref{fig:network-venn} to represent the relationship between subclasses and clusters.
 
 \begin{figure}[h]
