@@ -214,7 +214,7 @@ The introduction \dots
     \label{fig:assemble-example-venn}
 \end{figure}
 
-Figure~\ref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
+\Cref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
 The original dataset contains 3 classes $A_1, A_2$, and $A_3$, and we are able to decompose each into some subclasses, e.g., $A_1$ is decomposed into two subclasses of samples $A_{11}$ and $A_{12}$.
 There are 4 binary classifiers, each determines whether a sample belongs to the union of some subclasses marked with boxes, e.g., $d_1$ determines whether a sample belongs to the union of $\{A_{11}, A_{12}, A_{21}, A_{22}\}$.
 We can use classifiers $d_1, d_2, d_3$ and set operations for the classification task:
@@ -338,7 +338,7 @@ As a result, the problem instance $k$ is solvable iff. there exists a $D$ with s
 By definition, the problem is an NP problem.
 \end{proof}
 
-Table~\ref{tab:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in Figure~\ref{fig:assemble-example-venn}.
+\Cref{tab:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in \cref{fig:assemble-example-venn}.
 If we only use the encoding from $d_1, d_2, d_3$, we find no two subclasses with different labels share the same encoding, and therefore certify the correctness of the feasible solution proposed before.
 For the partial classification task for $A_3$, using two bits from $d_2, d_4$ already provides distinguishable encoding for $A_{31}$ and the remaining dummy classes.
 
@@ -361,7 +361,7 @@ For the partial classification task for $A_3$, using two bits from $d_2, d_4$ al
 
 \subsection{The Heuristic Search Algorithm}
 \label{sec:assembly-algorithm}
-Based on the encoding method, we propose a search algorithm based on greedy heuristics in Algorithm~\ref{tab:heuristic-search} for finding a feasible solution to the problem instance with constraint $k$.
+Based on the encoding method, we propose a search algorithm based on greedy heuristics in \cref{tab:heuristic-search} for finding a feasible solution to the problem instance with constraint $k$.
 
 \begin{algorithm}
 	\caption{The General Algorithm}
@@ -420,7 +420,7 @@ More specifically, we need to find an initial set of binary classifiers with fol
 
 \paragraph{Remark.} We do not need to provide the subclasses in the input, because they can be derived from the initial set of classifiers.
 Given encodings under the initial classifier set, samples share the same encoding can be considered as a subclass, and there is no need to further split those subclasses.
-For example, in the intro example in Figure~\ref{fig:assemble-example-venn}, there is no need to distinguish $A_{11}$ and $A_{12}$ and we can group them as a single subclass.
+For example, in the intro example in \cref{fig:assemble-example-venn}, there is no need to distinguish $A_{11}$ and $A_{12}$ and we can group them as a single subclass.
 
 To satisfy the above constraints, we follow the previous work of Wang \textit{et al.} \cite{wang2018interpret} to use critical data routing path (CDRP) for generating the input.
 CDRP clustering allow us to decompose a large network model into several disjoint small ones.
@@ -442,7 +442,7 @@ Critical Data Routing Path is a method to find a path containing critical nodes,
 
 From the original model, we introduce a scalar control gate to every output channel of one layer, with nonnegative and sparse value. They will be multiplied to the layer’s output channelwise, resulting in the routing nodes. The nodes that are not suppressed, or have control gate weight greater zero, will be linked together to compose the routing paths. Then finding the critical data routing path can be reduced to optimize the weights of the control gates.
 
-Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sample we follow the procedure of Distillation Guided Routing (algorithm \ref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample. As the original paper \cite{wang2018interpret} states, these gate values encode patterns inside the input images, e.g. tinca in horizontal positions or squat positions will have different encodings.
+Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sample we follow the procedure of Distillation Guided Routing (\cref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample. As the original paper \cite{wang2018interpret} states, these gate values encode patterns inside the input images, e.g. tinca in horizontal positions or squat positions will have different encodings.
 
 \begin{algorithm}
 	\caption{Distillation Guided Routing, introduced in paper \cite{wang2018interpret}}
@@ -469,7 +469,7 @@ Critical data routing path is extracted through optimizaition of control gates v
 
 The fact that CDRP as encoding of samples directly leads to the idea that decompoisite one large model into several smaller models, each of which processing one pattern of input data. Once the gate vectors of all samples is obtained, we use k-means clusterng to cluster these vectors to gather samples sharing similar patterns together.
 
-The visualization of clustering results is presented in figure \ref{fig:vgg-cluster-pca}.
+The visualization of clustering results is presented in \cref{fig:vgg-cluster-pca}.
 
 \begin{figure}[!htp]
 	\centering
@@ -491,7 +491,7 @@ The results shows we can derive a good basis of binary classifers through these 
 
 \paragraph{Model pruning and fine tuning}
 
-We use methods introduced in paper \cite{LiDongYue} to prune the model according to gate vector of cluster centers (algorithm \ref{alg:prune}).
+We use methods introduced in paper \cite{LiDongYue} to prune the model according to gate vector of cluster centers (\cref{alg:prune}).
 
 \begin{algorithm}
 	\caption{Model Pruning of clusters}
@@ -523,7 +523,7 @@ We finetune this model with samples having positive labels in the clusterwhich i
 %\todo{metion CIFAR-5}
 \subsection{CDRP Model Assembly}
 Based on the results of CDRP decomposition in VGG16-C and VGG16-D, we determine subclasses for CIFAR-5	\footnote{CIFAR-5 is a shorthand refering to samples having the first 5 class labels in CIFAR-100.} and their relationship to the CDRP clusters by encoding samples using all CDRP models.
-Instead of using Venn diagram like the intro example in Figure~\ref{fig:assemble-example-venn}, we use the network diagram in Figure~\ref{fig:network-venn} to represent the relationship between subclasses and clusters.
+Instead of using Venn diagram like the intro example in \cref{fig:assemble-example-venn}, we use the network diagram in \cref{fig:network-venn} to represent the relationship between subclasses and clusters.
 
 \begin{figure}[h]
 	\centering
@@ -569,13 +569,13 @@ The sample distribution of each cluster is shown in Figure~\ref{fig:vgg-cluster}
 
 \end{figure}
 
-From Figure~\ref{fig:vgg-cluster}, a cluster from VGG-C typically consists of samples from a single class, which is consistent with the result shown in Figure~\ref{}. 
+From \cref{fig:vgg-cluster}, a cluster from VGG-C typically consists of samples from a single class, which is consistent with the result shown in \cref{fig:vgg-cluster-pca}. 
 By contrast, a cluster from VGG-D may contain samples with different labels.
 
 We notice that some clusters only contain extremely few samples such as Cluster-5 so we won't take these clusters into account when choosing classifiers.
 
 \paragraph{Classifiers.} Except some too small ones, we consider one cluster as a classifer. Each classifier judges whether the test sample should in the corresponding cluster. 
-From Figure~\ref{fig:vgg-cluster}, we determine the possibile labels of samples in each cluster as is shown in Table~\ref{tab:cluster_label}. 
+From \cref{fig:vgg-cluster}, we determine the possibile labels of samples in each cluster as is shown in \cref{tab:cluster_label}. 
 
 \begin{table}[!htp]
 	\begin{tabular}{|c|c|c|}
@@ -617,11 +617,11 @@ After finetune, most of the classifers can reach an accuracy more than 80\%, whi
 
  
 \subsection{Fusing VGGNets for Specific Tasks through CDRP Assembly}
-\paragraph{Fusion} We implement the heuristic search in Algorithm~\ref{tab:heuristic-search} to fuse the classifiers. 
+\paragraph{Fusion} We implement the heuristic search in \cref{tab:heuristic-search} to fuse the classifiers. 
 Since we want to finish a specific task of classifying among five classes, we set a upper bound of the number of classifiers $k=4$. 
 After we select these classifiers with this algorithm, different results of each classifier ($0$ and $1$ represent the sample is or isn't in the cluster respectively) correspond to a unique label.
 In our implementation, the algorithm choose four classifiers: 3,4,1,2 in order. 
-The accuracy of the four classifiers are shown in Table~\ref{tab:classifer-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
+The accuracy of the four classifiers are shown in \cref{tab:classifer-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
 
 \begin{table}[!htp]
 	\begin{tabular}{|c|c|c|c|c|}
@@ -639,9 +639,9 @@ The accuracy of the four classifiers are shown in Table~\ref{tab:classifer-accur
 For example, if the result of classifer-3 is $0$ whether results of others are all $1$s, the encoding will be $0111$ and we can determine the sample is in class $0$. 
 
 Actually, we can determine the class uniquely with the prefix of encodings. 
-For instance, if the result of classifer-3 is $0$, we don't need to take other classifers into consideration since the only class $0$ is possible in cluster-3 according to Table~\ref{tab:cluster_label}
+For instance, if the result of classifer-3 is $0$, we don't need to take other classifers into consideration since the only class $0$ is possible in cluster-3 according to \cref{tab:cluster_label}
 
-The corresponding encoding of each class label is shown in Table~\ref{tab:encoding-and-accuarcy}. We can determine the class label with this encoding, the accuracy of which is also shown in Table~\ref{tab:encoding-and-accuarcy}.
+The corresponding encoding of each class label is shown in \cref{tab:encoding-and-accuarcy}. We can determine the class label with this encoding, the accuracy of which is also shown in \cref{tab:encoding-and-accuarcy}.
 
 \begin{table}[!htp]
 	\begin{tabular}{|c|c|c|c|c|c|c|}
