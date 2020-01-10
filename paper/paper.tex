@@ -436,13 +436,13 @@ Guideline:
 	\item Why fine tuning the clustered CDRP model into binary classifiers, and how we fine tune them
 \end{itemize}
 
-Critical Data Routing Path is a method to find a path containing critical nodes, whose removal causes great preformance setback, from a existing trained model. We introduce CDRP to decomposite one existing pretrained model from selecting representing CDRPs in a given dataset.
+Critical Data Routing Path is a method to find a path containing critical nodes, whose removal causes great preformance setback, from an existing trained model. We introduce CDRP to decomposite one existing pretrained model from selecting representing CDRPs in a given dataset.
 
 \paragraph{CDRP extraction}
 
 From the original model, we introduce a scalar control gate to every output channel of one layer, with nonnegative and sparse value. They will be multiplied to the layer’s output channelwise, resulting in the routing nodes. The nodes that are not suppressed, or have control gate weight greater zero, will be linked together to compose the routing paths. Then finding the critical data routing path can be reduced to optimize the weights of the control gates.
 
-Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sampe we follow the procedure of Distillation Guided Routing (algorithm \ref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample. As the original paper \cite{wang2018interpret} states, these gate values encode patterns inside the input images, e.g. tinca in horizontal positions or squat positions will have different encodings.
+Critical data routing path is extracted through optimizaition of control gates values. We freeze the weights of the model, and for each sample we follow the procedure of Distillation Guided Routing (algorithm \ref{alg:dgr}) \cite{wang2018interpret} to get the gate values. The gate values can be concatenated into one single vector as representation of that sample. As the original paper \cite{wang2018interpret} states, these gate values encode patterns inside the input images, e.g. tinca in horizontal positions or squat positions will have different encodings.
 
 \begin{algorithm}
 	\caption{Distillation Guided Routing, introduced in paper \cite{wang2018interpret}}
