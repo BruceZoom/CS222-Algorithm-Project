@@ -681,7 +681,25 @@ The corresponding encoding of each class label is shown in Table~\ref{tab:encodi
 
 
 \section{Related Work}
-The related work \dots
+There have been other similar works trying to understand and prune the complexity of the CNN.
+Zhou \textit{et al.} \cite{zhou2018interpreting} \cite{zhou2018revisiting} seek to understand the influence of certain filters on the accuracy wrt. some specific classes of samples by ablation and dissection.
+Their work provides certain explanations of the outcome, but they do not explain how their technique can be utilize to improve or compress the model and it is only useful for network interpretation.
+Yu \textit{et al.} \cite{yu2018distilling} attempt to produce task-specific models with reduced complexity through critical path distillation.
+They identify critical paths through activation visualization for specific classes, which is more efficient than training gates to find them in our work.
+But this means their critical path models are at the class level and these models can not interact with other external models through network fusion.
+
+Qin \textit{et al.} propose the CAPTOR \cite{qin2019captor}, a framework for filter pruning also through clustering.
+Different from our clustering method, they perform the clustering on filters with similar activation maximization visualization and prune similar filters to remove redundances.
+We could also use this technique to remove redundances within a CDRP model.
+Their pruning is again performed at the class level, while ours assembly is performed at the feature level, which is more fine-grained.
+
+On the topic of network fusion, there are also many marvelous researches.
+Du \textit{et al.} \cite{du2017fused} use multiple DNNs to refine the detections of a pedestrian detection generator and fuse these DNNs by fusing their outputs.
+This type of output level fusion is coarse-grained, where redundant feature extractions may have occurred in DNNs.
+On the opposite, Feichtenhofer \textit{et al.} \cite{feichtenhofer2016convolutional} proposed an extremely fine-grained fusion of multiple CNNs for video action recognition, where they carry out spatial fusion and temporal fusion on the layer level and achieves state-of-the-art results.
+However, there are common problems of both work.
+Their framework are task-specific and is difficult to apply their techniques in other domains.
+And their works do not aim to reduce the network complexity during the fusion process.
 
 \section{Conclusion}
 The conclusion \dots
