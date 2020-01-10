@@ -183,7 +183,11 @@
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-  The abstract \dots
+  To deploy DNN models in edge devices, we need to reduce the size and complexity of the model to fit the limited energy supply and computational capability of those devices.
+  One solution to the problem is to substitute the large network with small ones and focus only on specific tasks.
+  To give an implementation of such idea, we propose a general framework of assembling multiple binary classifiers into one that performs complicated classification tasks and give an heuristic search algorithm for the classifier combination.
+  We instantiate such framework on network fusion for image classification using critical data routing path method, and we implement it to fuse two VGGNets w.r.t. part of CIFAR-100 dataset.
+  Experiments show that we can reduce about $90\%$ computing consumption by pruning convolution kernels in networks while maintain a high classification accuracy for partial classification.
 \end{abstract}
 
 
@@ -214,7 +218,7 @@ This makes it possible to develop task-specific and light-weighted models to mee
 % Network fusion is a potential way to further improve the performance of network models with the advance of edge devices, where we could deploy many models through devices, let them perform inference in parallel, and retrieve and join the results \cite{fang2019teamnet}.
 % Nevertheless, this could cause redundant complexity across models, making it unable to fully utilize the capability of each edge devices.
 
-In this paper, we first study a framework of assembling multiple small binary classifiers into one that performs complicated classification tasks.
+We first study a framework of assembling multiple small binary classifiers into one that performs complicated classification tasks.
 \Cref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
 
 \begin{figure}[h]
@@ -249,8 +253,8 @@ Such CDRP model decomposition and assembly framework has many applications.
 In this paper, we address the followings.
 \begin{itemize}
 	\item We propose a general assembly framework for binary classifiers and a heuristic algorithm to the search problem in \cref{sec:assembly}.
-	\item We instantiate the assembly framework based on the CDRP method for the image classification task on CIFAR-100 in \cref{sec:cdrp}.
-	\item We experiment such implementation on a subset of CIFAR-5 in \cref{sec:experiments}.
+	\item We instantiate the assembly framework based on the CDRP method for the image classification task in \cref{sec:cdrp}.
+	\item We experiment such implementation on a subset of CIFAR-100 in \cref{sec:experiments}.
 \end{itemize}
 
 \section{The General Assembly Framework}
@@ -718,12 +722,12 @@ Their framework are task-specific and is difficult to apply their techniques in 
 And their works do not aim to reduce the network complexity during the fusion process.
 
 \section{Conclusion}
-In this work, to develop task-specific and light-weighted models for edge devices, we propose a general assembly framework for binary classifers. 
-And we formulate the choice of these classifiers into a search problem. 
+To develop task-specific and light-weighted models for edge devices, we propose a general assembly framework for binary classifers in this paper.
+We formulate the choice of these classifiers into a search problem and design a heuristic search algorithm for it.
 We implement this framework based on CDRP method for image classification task. 
 In our experiment, we successfully reduce about $90\%$ computing consumption by pruning $90\%$ channels in the network while reach a high classification accuracy.
 
-In future work, we may take the accuracy of classifiers into account so that we can choose binary-classifiers with performance score, which can help to achieve a higher accuracy. 
+In the future, we may take the accuracy of small classifiers into account so that we can choose binary classifiers with performance score, which can help to achieve a higher accuracy. 
 Furthermore, we can design more efficient search algorithm according to the characteristics of subclasses, for example, like each subclass only fall into two clusters as shown in  \cref{fig:network-venn}.
 
 
