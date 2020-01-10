@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 from CIFAR_DataLoader import CifarDataManager, display_cifar
 # from subclass_encoder import SubclassEncoder
 import sys
+import os
 import argparse
 
 
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("Cluster predictor")
     parser.add_argument(
         "--encoder_save_path", help="The file to save the encoder.",
-        default="../data/encoder.pkl", type=str)
+        default="../data", type=str)
     parser.add_argument(
         "--start_class", help="start class of predictor",
         default=0, type=int
@@ -27,7 +28,8 @@ if __name__ == '__main__':
     #
     # with open(args.encoder_save_path, "rb") as file:
     #     encoder = pickle.load(file)
-    with open("../data/sub_encoding.txt") as file:
+    dir = os.path.join(args.encoder_save_path,"sub_encoding.txt")
+    with open(dir,"r") as file:
         sub_encoding = file.readlines()
     classid_cluster = {}
     for l in sub_encoding:
@@ -36,12 +38,12 @@ if __name__ == '__main__':
         if len(line)<2:
             continue
         label = int(float(line[1]))
+
         cluster = int(float(line[0]))
         if label in classid_cluster:
             classid_cluster[label].append(cluster)
         else:
             classid_cluster[label] = [cluster]
-
     class_counter = {}
     class_clusters = {}
     for class_id in range(args.start_class,args.end_class+1):
@@ -62,9 +64,11 @@ if __name__ == '__main__':
             class_clusters[label].append(classid_cluster[label][class_counter[label]])
             class_counter[label] += 1
 
-    with open("../data/clusters.pkl","wb") as file:
+    dir = os.path.join(args.encoder_save_path, "clusters.pkl")
+    with open(dir,"wb") as file:
         pickle.dump(clusters,file)
-    with open("../data/class_clusters.pkl","wb") as file:
+    dir = os.path.join(args.encoder_save_path, "class_clusters.pkl")
+    with open(dir,"wb") as file:
         pickle.dump(class_clusters,file)
 
 

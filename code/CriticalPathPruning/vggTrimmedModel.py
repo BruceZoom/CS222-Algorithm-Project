@@ -18,7 +18,7 @@ class TrimmedModel():
         2. Assign new weights to layers 
         3. Test Accuracy
     '''
-    def __init__(self,target_class_id=[0],target_cluster_id=[0], mode = 'cluster',multiPruning=False):
+    def __init__(self,target_class_id=[0,1,2,3,4],target_cluster_id=[0], mode = 'cluster',multiPruning=False):
         self.prune_ratio = 0
 
         self.graph = tf.Graph()

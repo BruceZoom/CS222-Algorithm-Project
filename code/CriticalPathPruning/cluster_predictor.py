@@ -7,6 +7,7 @@ from CIFAR_DataLoader import CifarDataManager, display_cifar
 from subclass_encoder import SubclassEncoder
 import sys
 import argparse
+import os
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Cluster predictor")
@@ -18,6 +19,12 @@ if __name__ == '__main__':
         "--end_class", help="end class of predictor",
         default=99, type=int
     )
+    parser.add_argument(
+        "--encoder_save_path", help="The file to save the encoder.",
+        default="../data", type=str)
+    parser.add_argument(
+        "--image_encoding_save_path", help="The file to save the image encodings",
+        default="ImageEncoding_test", type=str)
 
     args = parser.parse_args()
 
@@ -29,8 +36,8 @@ if __name__ == '__main__':
         class_clusters[class_id] = []
 
 
-
-    with open("../data/encoder.pkl", "rb") as file:
+    dir = os.path.join(args.encoder_save_path,"encoder.pkl")
+    with open(dir, "rb") as file:
         encoder = pickle.load(file)
     kmeans = encoder.encoders[0]
 
@@ -45,7 +52,8 @@ if __name__ == '__main__':
             label = test_labels[i]
             if label<args.start_class or label>args.end_class:
                 continue
-            path = "ImageEncoding_test/class%d/class%d-pic%d.json"%(label,label,class_counter[label])
+            path = "class%d/class%d-pic%d.json"%(label,label,class_counter[label])
+            path = os.path.join(args.image_encoding_save_path,path)
             with open(path, "r") as file:
                 res = json.load(file)
             tmp = []
@@ -57,7 +65,11 @@ if __name__ == '__main__':
             class_clusters[label].append(cluster)
             class_counter[label] += 1
 
-    with open("../data/clusters_test.pkl","wb") as file:
+    dir = os.path.join(args.encoder_save_path,"clusters_test.pkl")
+    with open(dir,"wb") as file:
         pickle.dump(clusters,file)
-    with open("../data/class_clusters_test.pkl","wb") as file:
+    dir = os.path.join(args.encoder_save_path,"class_clusters_test.pkl")
+    with open(dir,"wb") as file:
         pickle.dump(class_clusters,file)
+    for key in class_clusters:
+        print(key,class_clusters[key])
