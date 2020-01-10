@@ -33,16 +33,20 @@ class CifarLoader(object):
         self.class_image = None
         self.class_label = None
 
-    def load(self, load_cluster=False):
+    def load(self, load_cluster=False, cluster_dir = "../data"):
         if load_cluster:
-            with open("../data/clusters.pkl","rb") as file:
+            dir = os.path.join(cluster_dir,"clusters.pkl")
+            with open(dir,"rb") as file:
                 self.cluster = pickle.load(file,encoding="bytes")
-            with open("../data/class_clusters.pkl","rb") as file:
+            dir = os.path.join(cluster_dir,"class_clusters.pkl")
+            with open(dir,"rb") as file:
                 self.class_cluster = pickle.load(file,encoding="bytes")
 
-            with open("../data/clusters_test.pkl","rb") as file:
+            dir = os.path.join(cluster_dir,"clusters_test.pkl")
+            with open(dir,"rb") as file:
                 self.cluster_test = pickle.load(file,encoding="bytes")
-            with open("../data/class_clusters_test.pkl","rb") as file:
+            dir = os.path.join(cluster_dir,"class_clusters_test.pkl")
+            with open(dir,"rb") as file:
                 self.class_cluster_test = pickle.load(file,encoding="bytes")
 
         data = [unpickle(f) for f in self._source]
@@ -69,7 +73,7 @@ class CifarLoader(object):
         self._i = (self._i + batch_size) % len(self.images)
         return x, one_hot(y, 100)
 
-    def next_batch_balance(self,batch_size,target_class_id,mode = "class", type = "train"):
+    def next_batch_balance(self,batch_size,target_class_id,cluster_id=[0],mode = "class", type = "train"):
         num = batch_size // (len(target_class_id)+1)
         tmp = []
         if type == "train":
@@ -81,10 +85,12 @@ class CifarLoader(object):
             # class_label = random.sample(self.class_label[class_id],num)
             for _ in range(num):
                 i = random.randint(0,len(self.class_image[class_id])-1)
+                # if type=="train" and class_cluster[class_id][i] not in cluster_id:
+                #     i = random.randint(0, len(self.class_image[class_id]) - 1)
                 tmp.append((self.class_image[class_id][i],self.class_label[class_id][i],class_cluster[class_id][i]))
 
         other_num = batch_size - num * len(target_class_id)
-        other_id = list(set(range(100))-set(target_class_id))
+        other_id = list(set(range(5))-set(target_class_id))
         for j in range(other_num):
             id = random.choice(other_id)
             i = random.randint(0,len(self.class_image[id])-1)
@@ -106,7 +112,7 @@ class CifarLoader(object):
         y = np.array(y)
         return x, one_hot(y,hot_num)
 
-    def next_batch_balance_without_onehot(self,batch_size,target_class_id,mode="class",type = "train"):
+    def next_batch_balance_without_onehot(self,batch_size,target_class_id,cluster_id=[0],mode="class",type = "train"):
         num = batch_size // (len(target_class_id)+1)
         tmp = []
         if type == "train":
@@ -118,10 +124,12 @@ class CifarLoader(object):
             # class_label = random.sample(self.class_label[class_id],num)
             for _ in range(num):
                 i = random.randint(0,len(self.class_image[class_id])-1)
+                # if type=="train" and class_cluster[class_id][i] not in cluster_id:
+                #     i = random.randint(0, len(self.class_image[class_id]) - 1)
                 tmp.append((self.class_image[class_id][i],self.class_label[class_id][i],class_cluster[class_id][i]))
 
         other_num = batch_size - num * len(target_class_id)
-        other_id = list(set(range(100))-set(target_class_id))
+        other_id = list(set(range(5))-set(target_class_id))
         for j in range(other_num):
             id = random.choice(other_id)
 
@@ -183,7 +191,7 @@ class CifarLoader(object):
 
 # ============ Data Manager: Wrap the Data Loader===============
 class CifarDataManager(object):
-    def __init__(self, load_cluster=True):
+    def __init__(self, load_cluster=True, cluster_dir = "../data"):
         '''
         CIFAR 10 Data Set 
         '''
@@ -193,8 +201,8 @@ class CifarDataManager(object):
         '''
         CIFAR 100 Data Set 
         '''
-        self.train = CifarLoader(["train"]).load(load_cluster)
-        self.test = CifarLoader(["test"]).load(load_cluster)
+        self.train = CifarLoader(["train"]).load(load_cluster, cluster_dir)
+        self.test = CifarLoader(["test"]).load(load_cluster, cluster_dir)
 
 def display_cifar(images, size):
     n = len(images)

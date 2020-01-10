@@ -7,20 +7,20 @@ import numpy as np
 import tensorflow as tf
 from sklearn.utils import shuffle
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6"
 class FineTuneModel():
     '''
     Fine Tune Model: (Basically doing transfer learning)
         1. Last FC layer neurons number would be the target class number + 1
         2. Need to transform the original label to targeted class label
     '''
-    def __init__(self, target_class_id=[0], target_cluster_id = [0], mode = "class"):
+    def __init__(self, target_class_id=[0], target_cluster_id = [0], mode = "class",cluster_dir = None):
         '''
         Set hyperparameters
         '''
         self.learning_rate = 0.1
         self.epoch = 0
-        self.prune_ratio = 0.9
+        self.prune_ratio = 0.95
 
         '''
         For one input image :
@@ -34,16 +34,33 @@ class FineTuneModel():
         if mode == "class":
             self.target_id = target_class_id
             self.target_number = len(target_class_id) + 1
+            self.cluster_dir = None
         else:
             self.target_id = target_cluster_id
             self.target_number = len(target_cluster_id) + 1
+            self.cluster_dir = os.path.join(cluster_dir,"cluster%d.json")
 
         self.target_class_id = target_class_id # assign the trim class id
+
 
         self.graph = tf.Graph()
         self.build_model(self.graph)
         print("restored the pretrained model......")
         self.restore_model(self.graph)
+
+    def from_checkpoint(self,filename):
+        # If GPU is needed
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        self.sess = tf.Session(graph = graph, config = config)
+        # Else if CPU needed
+        # self.sess = tf.Session(graph = graph)
+        self.sess.run(self.init)
+        with graph.as_default():
+            saver = tf.train.Saver(savedVariable)
+            saver.restore(self.sess, filename)
+            print("Restored successfully!")
+
 
     '''
     Test Accuracy
@@ -67,8 +84,8 @@ class FineTuneModel():
                 new_test_labels.append(1)
         new_test_labels = np.array(new_test_labels)
 
-        p = new_test_labels==0
-        n = new_test_labels==1
+        p = ys_pred_argmax==0
+        n = ys_pred_argmax==1
 
         p_label = new_test_labels[p]
         p_pred = ys_pred_argmax[p]
@@ -81,15 +98,17 @@ class FineTuneModel():
         fn = sum(n) - tn
 
         print("Test Accuracy:" + str(accuracy))
-        print("TP: %f, FP: %f, TN: %f, FN: %f"%(tp/(tp+fp),fp/(tp+fp),tn/(tn+fn),fn/(tn+fn)))
+        print("TP: %f, FP: %f, TN: %f, FN: %f"%(tp,fp,tn,fn))
+
+        return (accuracy,tp,fp,tn,fn)
         # print("test:",ys_pred_argmax)
     '''
     Fine tune training
     '''
     def train_model(self, input_images, input_labels):
         # if self.epoch == 5: self.learning_rate /= 10
-        if self.epoch == 400: self.learning_rate /= 10
-        if self.epoch == 800: self.learning_rate /= 10
+        if self.epoch == 1200: self.learning_rate /= 5
+        if self.epoch == 1500: self.learning_rate /= 5
         _, loss,ys_pred_argmax  = self.sess.run([self.train_step, self.loss, self.ys_pred_argmax], feed_dict = {
                 self.xs: input_images,
                 self.ys_orig : input_labels, 
@@ -100,6 +119,18 @@ class FineTuneModel():
         self.epoch += 1
         # print("train:", ys_pred_argmax)
         print("Loss: ",np.array(loss))
+
+
+    def save_model(self,classifier_id,output_dir):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        filename = "classifier%d.ckpt"%classifier_id
+        filename = os.path.join(output_dir,filename)
+        with self.graph.as_default():
+            saver = tf.train.Saver()
+            saver.save(self.sess,filename)
+        print('Wrote snapshot to: {:s}'.format(filename))
+
 
     '''
     Restore the original network weights
@@ -130,11 +161,16 @@ class FineTuneModel():
                     name_prefix += ':0'
                     if name_prefix in self.AllGateVariables:
                         continue
+                if "BatchNorm" in name and "data-d" in self.cluster_dir:
+                    continue
                 name = i.name[:-2]
                 savedVariable[name] = variable
             saver = tf.train.Saver(savedVariable)
             # saver = tf.train.Saver(max_to_keep = None)
-            saver.restore(self.sess, "vggNet/augmentation.ckpt-120")
+            if "data-d" in self.cluster_dir:
+                saver.restore(self.sess, "vgg16-d/best.ckpt")
+            else:
+                saver.restore(self.sess, "vggNet/augmentation.ckpt-120")
             print("Restored successfully!")
 
     '''
@@ -146,7 +182,7 @@ class FineTuneModel():
         if self.mode == "class":
             json_path = "./ClassEncoding/class" + str(classid) + ".json"
         else:
-            json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+            json_path = self.cluster_dir%classid
         with open(json_path, "r") as f:
             gatesValueDict = json.load(f)
             for idx in range(len(gatesValueDict)):
@@ -173,7 +209,7 @@ class FineTuneModel():
         if self.mode == "class":
             json_path = "./ClassEncoding/class" + str(classid) + ".json"
         else:
-            json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+            json_path = self.cluster_dir%classid
 
         
         allGatesValue = []
@@ -226,7 +262,7 @@ class FineTuneModel():
             if self.mode == "class":
                 json_path = "./ClassEncoding/class" + str(classid) + ".json"
             else:
-                json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+                json_path = self.cluster_dir % classid
 
             with open(json_path, "r") as f:
                 gatesValueDict = json.load(f)
@@ -276,7 +312,7 @@ class FineTuneModel():
             if self.mode == "class":
                 json_path = "./ClassEncoding/class" + str(classid) + ".json"
             else:
-                json_path = "./ClusterEncoding/cluster" + str(classid) + ".json"
+                json_path = self.cluster_dir % classid
 
             with open(json_path, "r") as f:
                 gatesValueDict = json.load(f)
@@ -401,8 +437,12 @@ class FineTuneModel():
             '''
             VGG Network Model Construction with Control Gates 
             '''
+            current = self.xs
+            if "data-d" in self.cluster_dir:
+                with tf.variable_scope("Resize", reuse=tf.AUTO_REUSE):
+                    current = tf.image.resize_images(current, [224, 224], method=tf.image.ResizeMethod.BILINEAR)
             with tf.variable_scope("Conv1", reuse = tf.AUTO_REUSE):
-                current = self.batch_activ_conv(self.xs, 3, 64, 3, self.is_training, self.keep_prob)
+                current = self.batch_activ_conv(current, 3, 64, 3, self.is_training, self.keep_prob)
             with tf.variable_scope("Conv2", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_conv(current, 64, 64, 3, self.is_training, self.keep_prob)
                 current = self.maxpool2d(current, k=2)
@@ -416,25 +456,41 @@ class FineTuneModel():
             with tf.variable_scope("Conv6", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_conv(current, 256, 256, 3, self.is_training, self.keep_prob)
             with tf.variable_scope("Conv7", reuse = tf.AUTO_REUSE):
-                current = self.batch_activ_conv(current, 256, 256, 1, self.is_training, self.keep_prob)
+                if "data-d" in self.cluster_dir:
+                    current = self.batch_activ_conv(current, 256, 256, 3, self.is_training, self.keep_prob)
+                else:
+                    current = self.batch_activ_conv(current, 256, 256, 1, self.is_training, self.keep_prob) ###
                 current = self.maxpool2d(current, k=2)
             with tf.variable_scope("Conv8", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_conv(current, 256, 512, 3, self.is_training, self.keep_prob)
             with tf.variable_scope("Conv9", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_conv(current, 512, 512, 3, self.is_training, self.keep_prob)
             with tf.variable_scope("Conv10", reuse = tf.AUTO_REUSE):
-                current = self.batch_activ_conv(current, 512, 512, 1, self.is_training, self.keep_prob)
+                if "data-d" in self.cluster_dir:
+                    current = self.batch_activ_conv(current, 512, 512, 3, self.is_training, self.keep_prob)
+                else:
+                    current = self.batch_activ_conv(current, 512, 512, 1, self.is_training, self.keep_prob)
+
                 current = self.maxpool2d(current, k=2)
             with tf.variable_scope("Conv11", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_conv(current, 512, 512, 3, self.is_training, self.keep_prob)
             with tf.variable_scope("Conv12", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_conv(current, 512, 512, 3, self.is_training, self.keep_prob)
             with tf.variable_scope("Conv13", reuse = tf.AUTO_REUSE):
-                current = self.batch_activ_conv(current, 512, 512, 1, self.is_training, self.keep_prob)
+                if "data-d" in self.cluster_dir:
+                    current = self.batch_activ_conv(current, 512, 512, 3, self.is_training, self.keep_prob)
+                else:
+                    current = self.batch_activ_conv(current, 512, 512, 1, self.is_training, self.keep_prob)
                 current = self.maxpool2d(current, k=2)
-                current = tf.reshape(current, [ -1, 512 ])
+                if "data-d" not in self.cluster_dir:
+                    current = tf.reshape(current, [ -1, 512 ])
+                else:
+                    current = tf.reshape(current, [-1, 25088])
             with tf.variable_scope("FC14", reuse = tf.AUTO_REUSE):
-                current = self.batch_activ_fc(current, 512, 4096, self.is_training)
+                if "data-d" not in self.cluster_dir:
+                    current = self.batch_activ_fc(current, 512, 4096, self.is_training)
+                else:
+                    current = self.batch_activ_fc(current, 25088, 4096, self.is_training)
             with tf.variable_scope("FC15", reuse = tf.AUTO_REUSE):
                 current = self.batch_activ_fc(current, 4096, 4096, self.is_training)
             with tf.variable_scope("FC16", reuse = tf.AUTO_REUSE):
@@ -505,7 +561,8 @@ class FineTuneModel():
     def batch_activ_conv(self, current, in_features, out_features, kernel_size, is_training, keep_prob):
         with tf.variable_scope("composite_function", reuse = tf.AUTO_REUSE):
             current = self.conv2d(current, in_features, out_features, kernel_size)
-            current = tf.contrib.layers.batch_norm(current, scale=True, is_training=is_training, updates_collections=None, trainable=True)
+            if "data-d" not in self.cluster_dir:
+                current = tf.contrib.layers.batch_norm(current, scale=True, is_training=is_training, updates_collections=None, trainable=True)
             # convValues.append(current)
             current = tf.nn.relu(current)
             #current = tf.nn.dropout(current, keep_prob)

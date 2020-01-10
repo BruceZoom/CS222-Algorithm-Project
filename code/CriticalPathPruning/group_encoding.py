@@ -19,7 +19,7 @@ def group(IE_dir, CE_dir):
 
 
 if __name__ == '__main__':
-    dir = ['ImageEncoding', 'ClassEncoding']
+    dir = ['vgg16-d/ImageEncoding_test', 'ClassEncoding']
     if len(sys.argv) > 1: dir[0] = sys.argv[1]
     if len(sys.argv) > 2: dir[1] = sys.argv[2]
     group(*dir)
