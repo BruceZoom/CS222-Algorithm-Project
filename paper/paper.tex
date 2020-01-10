@@ -215,7 +215,7 @@ This makes it possible to develop task-specific and light-weighted models to mee
 % Nevertheless, this could cause redundant complexity across models, making it unable to fully utilize the capability of each edge devices.
 
 In this paper, we first study a framework of assembling multiple small binary classifiers into one that performs complicated classification tasks.
-Figure~\ref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
+\Cref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
 
 \begin{figure}[h]
     \centering
@@ -224,10 +224,6 @@ Figure~\ref{fig:assemble-example-venn} shows an example of the assembly problem 
     \label{fig:assemble-example-venn}
 \end{figure}
 
-<<<<<<< HEAD
-=======
-\Cref{fig:assemble-example-venn} shows an example of the assembly problem of our interest.
->>>>>>> refs/remotes/origin/master
 The original dataset contains 3 classes $A_1, A_2$, and $A_3$, and we are able to decompose each into some subclasses, e.g., $A_1$ is decomposed into two subclasses of samples $A_{11}$ and $A_{12}$.
 There are 4 binary classifiers, each determines whether a sample belongs to the union of some subclasses marked with boxes, e.g., $d_1$ determines whether a sample belongs to the union of $\{A_{11}, A_{12}, A_{21}, A_{22}\}$.
 We can use classifiers $d_1, d_2, d_3$ and set operations for the classification task:
