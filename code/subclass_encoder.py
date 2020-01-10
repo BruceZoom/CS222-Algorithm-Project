@@ -12,16 +12,16 @@ class SubclassEncoder(object):
         if threshold is not None:
             if verbose: print("Removing anomalies...")
             cluster_cnts = np.histogram(kmeans.labels_, bins=len(np.unique(kmeans.labels_)))[0]
-            print("Samples in clusters: {}".format(cluster_cnts))
-            kmeans.cluster_centers_ = kmeans.cluster_centers_[cluster_cnts > threshold]
-            elim_labels = np.where(cluster_cnts <= threshold)
+            print(cluster_cnts)
+            kmeans.cluster_centers_ = kmeans.cluster_centers_[cluster_cnts > 10]
+            elim_labels = np.where(cluster_cnts <= 10)
             if type(elim_labels) is tuple and len(elim_labels) == 1:
                 elim_labels = elim_labels[0]
-            print("Clusters eliminated: {}".format(elim_labels))
+            print(elim_labels)
             for label in elim_labels:
-                # print(kmeans.labels_, label)
-                # print(sum(kmeans.labels_ == label))
-                # print(data[kmeans.labels_ == label, :].shape)
+                print(kmeans.labels_, label)
+                print(sum(kmeans.labels_ == label))
+                print(data[kmeans.labels_ == label, :].shape)
                 kmeans.labels_[kmeans.labels_ == label] = kmeans.predict(
                     data[kmeans.labels_ == label, :])
         self.encoders = [kmeans, ]

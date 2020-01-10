@@ -83,6 +83,7 @@
 \usepackage{lipsum}
 \usepackage{mathtools}
 \usepackage{cuted}
+\usepackage{makecell}
 
 \usepackage{amsmath}
 \usepackage{extpfeil}
@@ -338,11 +339,7 @@ As a result, the problem instance $k$ is solvable iff. there exists a $D$ with s
 By definition, the problem is an NP problem.
 \end{proof}
 
-<<<<<<< HEAD
 \Cref{tab:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in \cref{fig:assemble-example-venn}.
-=======
-Figure~\ref{fig:assemble-example-encoding} shows the encoding mentioned in the certificate algorithm for the intro example in Figure~\ref{fig:assemble-example-venn}.
->>>>>>> ccbd856eb5256270a5207cc4134332492e0f84e1
 If we only use the encoding from $d_1, d_2, d_3$, we find no two subclasses with different labels share the same encoding, and therefore certify the correctness of the feasible solution proposed before.
 For the partial classification task for $A_3$, using two bits from $d_2, d_4$ already provides distinguishable encoding for $A_{31}$ and the remaining dummy classes.
 
@@ -546,8 +543,9 @@ In other word, the encoding for a subclass is a two-hot encoding.
 
 \section{Experiments}
 \subsection{Verifying CDRP Models of VGGNets trained on CIFAR-100}
-\paragraph{Clusters.} We perform K-Means on the CDRP control gates of each sample. 
-For VGGNet, we generate $1.5$ clusters per class.
+In this section, we perform K-Means on the CDRP control gates of each sample. For each cluster, we get a binary-classifier to determine whether the test sample should be in the cluster. Then, we fine tune each classifier in the CIFAR-100 dataset.
+
+\paragraph{Clusters.} For VGGNet, we generate $1.5$ clusters per class.
 Then, we get $14$ clusters from $5$ classes, among which $7$ clusters are from VGG16-C and $7$ clusters from VGG16-D. 
 
 The sample distribution of each cluster is shown in Figure~\ref{fig:vgg-cluster}.
@@ -605,7 +603,7 @@ From \cref{fig:vgg-cluster}, we determine the possibile labels of samples in eac
 \end{table}
 
 Since we want to get binary-classifiers, we slightly change the original VGGNet architecture in output dimension of the last Fully-Connected Layer from $100$ to $2$. 
-We also prune the original full VGGNet in the guide of CDRP with a prune ratio $0.9$ i.e. $90\%$ of channels in all layers are pruned. 
+We also prune the original full VGGNet in the guide of CDRP with a prune ratio $pr$ i.e. if $pr=0.9$, $90\%$ of channels in all layers are pruned. 
 As a result, each classifer only has $10\%$ parameters of the original full network.
 
 \paragraph{Finetune.} The classifiers we get above cannot achieve any meaningful results because they tend to classifiy all test samples not in the cluster and the weights of the last layer is initialized randomly.
@@ -615,25 +613,32 @@ Since the negative samples are greatly more than positive ones in the dataset, w
 We train each classifer with $1500$ iterations with a batch size $200$. 
 The learning rate is $0.1$ for the first $1200$ iterations and $0.01$ for the remaining $300$ iterations. 
 We only train the pruned model i.e. weights of the pruned channels will remain zero.
-After finetune, most of the classifers can reach an accuracy more than 80\%, which is much higher than the overall accuracy of the original full network.
+With a prune ratio $pr\leq0.9$, most of the classifers can reach an accuracy more than 80\% after finetune, which is much higher than the overall accuracy of the original full network.
  
 
  
 \subsection{Fusing VGGNets for Specific Tasks through CDRP Assembly}
-\paragraph{Fusion} We implement the heuristic search in \cref{tab:heuristic-search} to fuse the classifiers. 
-Since we want to finish a specific task of classifying among five classes, we set a upper bound of the number of classifiers $k=4$. 
-After we select these classifiers with this algorithm, different results of each classifier ($0$ and $1$ represent the sample is or isn't in the cluster respectively) correspond to a unique label.
+In this section, we implement the heuristic search in \cref{tab:heuristic-search} to fuse the classifiers. According to the 0/1 result of each classifer, we can get an unique encoding for each sample, which corresponds to a unqiue label so that we can determine the class of each test sample.
+
+\paragraph{Fusion}We implement \cref{tab:heuristic-search} to fuse the classifiers since we want to finish a specific task of classifying among five classes, we set a upper bound of the number of classifiers $k=4$. 
+After we select these classifiers with this \cref{tab:heuristic-search}, different results of each classifier ($0$ and $1$ represent the sample is or isn't in the cluster respectively) correspond to a unique label.
 In our implementation, the algorithm choose four classifiers: 3,4,1,2 in order. 
-The accuracy of the four classifiers are shown in \cref{tab:classifer-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
+The accuracy of the four classifiers with different prune ratio is shown in \cref{tab:classifer-accuracy}.The test set has also been balanced to make the number of positive and negative samples nearly $1:1$. 
+
 
 \begin{table}[h]
+
     \caption{Accuracy of Chosen Binary-Classifiers}
     \label{tab:classifer-accuracy}
 	\begin{tabular}{|c|c|c|c|c|}
 	\hline
 	Classifier ID & 3 & 4 & 1 & 2 \\
 	\hline
-	Accuracy & 96.0\% & 86.0\% & 91.5\% & 87.0\%\\
+	\begin{tabular}{c}Accuracy\\pr=0.95\end{tabular} & 62.3\% & 82.3\% & 83.5\% & 67.0\%\\
+	\hline
+	\begin{tabular}{c}Accuracy\\pr=0.9\end{tabular} & 96.0\% & 86.0\% & 91.5\% & 87.0\%\\
+	\hline
+	\begin{tabular}{c}Accuracy\\pr=0.8\end{tabular} & 97.5\% & 80.5\% & 94.5\% & 89.5\%\\
 	\hline
 	\end{tabular}
 \end{table}
@@ -644,20 +649,36 @@ For example, if the result of classifer-3 is $0$ whether results of others are a
 Actually, we can determine the class uniquely with the prefix of encodings. 
 For instance, if the result of classifer-3 is $0$, we don't need to take other classifers into consideration since the only class $0$ is possible in cluster-3 according to \cref{tab:cluster_label}
 
-The corresponding encoding of each class label is shown in \cref{tab:encoding-and-accuarcy}. We can determine the class label with this encoding, the accuracy of which is also shown in \cref{tab:encoding-and-accuarcy}.
+The corresponding encoding of each class label is shown in \cref{tab:encoding-and-accuarcy}. 
+We can determine the class label with this encoding, the accuracy of which is also shown in \cref{tab:encoding-and-accuarcy}. 
+
 
 \begin{table}[h]
+
     \caption{Encoding and Accuracy of Each Class Label}
     \label{tab:encoding-and-accuarcy}
 	\begin{tabular}{|c|c|c|c|c|c|c|}
 	\hline
+
 	Class ID & 0 & 1 & 2 & 3 & 4 & Overall \\
 	\hline
-	Encoding &0 & 110 & 1110 &10 & 1111 &\\
+	Encoding &0 & 110 & 1110 &10 & 1111 & -\\
 	\hline
+	\begin{tabular}{c}Accuracy\\pr=0.95\end{tabular} & 100\% & 30.0\% & 11.0\% & 28.0\% & 7.0\% & 34.4\%\\
+
+	\hline
+	\begin{tabular}{c}Accuracy\\pr=0.9\end{tabular} & 92.0\% & 93.0\% & 58.0\% & 85.0\% & 67.0\% & 79.0\%\\
+	\hline
+	\begin{tabular}{c}Accuracy\\pr=0.8\end{tabular} & 95.0\% & 91.0\% & 76.0\% & 78.0\% & 76.0\% & 83.2\%\\
+
+	\hline
+
 	\end{tabular}
 \end{table}
 
+From \cref{tab:encoding-and-accuarcy}, we find the overall accuracy is quite high if prune ratio $pr\leq0.9$ while the accuracy drops dramatically when $pr=0.95$ since we prune too much channels or even destroy the connectivity of the network. 
+When it comes to the trade-off between parameter number and overall accuracy, it is suitable to set prune ratio $pr=0.9$.
+Compared to the accuracy of original full model in these $5$ classes ($70.57\%$), our classifier not only achieve higher precision but also improve the efficiency. When $pr=0.9$, we can inference with the $4$ classifiers in parallel, which can save about $90\%$ computing consumption on a single device.
 
 \section{Related Work}
 The related work \dots
