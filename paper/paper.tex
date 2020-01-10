@@ -301,7 +301,6 @@ The solution to the problem instance should contain:
 	\item $score(D)$ the overall performance of the classifier set
 \end{itemize}
 
-\todo{The overal performance score.}
 
 We define the concept of \textit{distinguishing} as follows.
 \begin{definition}
@@ -429,7 +428,6 @@ where $p(c)$ is the probability for encoding $c$ to occur, and $p(c, l)$ is the 
 Note that the label ranges over $\mathcal{L}'$, the set of target labels and one dummy label, and all labels that are not targets are defined to be equal to the dummy one.
 In each search iteration, the algorithm will choose the classifier set that minimizes the entropy greedily, so that the search could possibly to end with minimum search depth.
 
-\todo{Analysis}
 
 \section{Model Assembly based on CDRP Decomposition and Clustering}
 \label{sec:cdrp}
@@ -563,7 +561,7 @@ A subclass node is connected with a cluster node iff. the subclass is a subset o
 
 Since we decompose two networks into two sets of internally disjoint clusters, each subclass will fall into exactly two clusters from separate models.
 In other word, the encoding for a subclass is a two-hot encoding.
-\todo{This means that the assembly problem can be solved with more efficient algorithms.}
+This means that the assembly problem can be solved with more efficient algorithms.
 
 \section{Experiments}
 \label{sec:experiments}
@@ -720,7 +718,14 @@ Their framework are task-specific and is difficult to apply their techniques in 
 And their works do not aim to reduce the network complexity during the fusion process.
 
 \section{Conclusion}
-The conclusion \dots
+In this work, to develop task-specific and light-weighted models for edge devices, we propose a general assembly framework for binary classifers. 
+And we formulate the choice of these classifiers into a search problem. 
+We implement this framework based on CDRP method for image classification task. 
+In our experiment, we successfully reduce about $90\%$ computing consumption by pruning $90\%$ channels in the network while reach a high classification accuracy.
+
+In future work, we may take the accuracy of classifiers into account so that we can choose binary-classifiers with performance score, which can help to achieve a higher accuracy. 
+Furthermore, we can design more efficient search algorithm according to the characteristics of subclasses, for example, like each subclass only fall into two clusters as shown in  \cref{fig:network-venn}.
+
 
 % Acknowledgments
 
